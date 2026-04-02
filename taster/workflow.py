@@ -6,7 +6,7 @@ from .utils import _get_available_solvents
 
 def run_partition_workflow(itp, structure, solvents=None, reference='water',
                            T=298, reps=3, ncores=None, output_dir='./Partitions',
-                           gmx='gmx', T=298, cutoff=5000, estimator='MBAR'):
+                           gmx='gmx', cutoff=5000, estimator='MBAR'):
     """
     Run the full partition coefficient workflow: prepare, run, and analyse.
  

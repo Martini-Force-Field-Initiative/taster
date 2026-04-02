@@ -7,6 +7,7 @@ from alchemlyb.estimators import TI, MBAR
 from .run import DEFAULT_STATES
 from .utils import _find_xvg_files
 
+
 RT     = 0.008314  # kJ/mol/K
 LN10   = np.log(10)
 
