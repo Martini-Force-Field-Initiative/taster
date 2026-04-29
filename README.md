@@ -116,4 +116,4 @@ avg  hexadecane           -15.1    0.3      2.64    0.05
 
 ## License
 
-SOOOOOOooooonnnn
+LGPLv2.1 License. See [LICENSE](LICENSE) for details.
