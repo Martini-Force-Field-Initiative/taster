@@ -12,9 +12,12 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 
 ## Requirements
 
-- Python >= 3.9
-- GROMACS (tested with 2023.x)
-- `numpy`, `pandas`, `MDAnalysis`, `alchemlyb`
+- Python >= 3.10
+- GROMACS (2024.3 or greater needed if topologies use angles with restricted bending potentials)
+- `numpy >= 1.20`
+- `pandas >= 1.0`
+- `MDAnalysis >= 2.0`
+- `alchemlyb >= 2.0`
 
 ---
 
