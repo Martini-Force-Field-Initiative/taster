@@ -1,3 +1,4 @@
+import os
 from importlib.resources import files
 from pathlib import Path
 from multiprocessing import Process, Semaphore
@@ -105,7 +106,7 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, T=298):
 
 
 def run_partitions(resname, solvents, reps=3, T=298,
-                   output_dir='./Partitions', ncores=36, gmx='gmx',
+                   output_dir='./Partitions', ncores=None, gmx='gmx',
                    states=DEFAULT_STATES):
     """
     Run TI simulations for all lambda states, solvents, and replicates locally
@@ -123,14 +124,17 @@ def run_partitions(resname, solvents, reps=3, T=298,
         Temperature (K) at which simulations will be run.
     output_dir : str or Path, optional
         Root directory containing prepared partition files. Defaults to './Partitions'.
-    ncores : int, optional
-        Maximum number of concurrent processes. Defaults to 36.
+    ncores : int or None, optional
+        Maximum number of concurrent processes. Defaults to None (auto-detect
+        via os.cpu_count()).
     gmx : str, optional
         GROMACS executable name or path. Defaults to 'gmx'.
     states : list of int, optional
         Lambda states to run. Defaults to DEFAULT_STATES (0-11).
     """
     output_dir = Path(output_dir).resolve()
+    if ncores is None:
+        ncores = os.cpu_count() or 1
     sem        = Semaphore(ncores)
     processes  = []
     offset     = 0

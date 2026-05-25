@@ -114,6 +114,14 @@ avg  hexadecane           -15.1    0.3      2.64    0.05
 
 ---
 
+## Notes on HPC Usage
+
+By default `ncores` is set to `os.cpu_count()`, which returns the total number of logical CPUs on the machine. On **shared HPC nodes** this will be the node's full core count.
+
+Always pass `ncores` explicitly to match the resources available to your job.
+
+---
+
 ## License
 
 LGPLv2.1 License. See [LICENSE](LICENSE) for details.
