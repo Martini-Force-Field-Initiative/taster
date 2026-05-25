@@ -7,7 +7,8 @@ __version__ = "0.1.0"
 from .workflow import run_partition_workflow
 from .prepare import prepare_partition_setup
 from .run import run_partitions
-from .analysis import process_partition, TIRoutine 
+from .analysis import process_partition, TIRoutine
+from . import utils
 
 
 def available_solvents():
