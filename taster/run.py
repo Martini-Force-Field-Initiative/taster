@@ -104,7 +104,7 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, T=298):
         sem.release()
 
 
-def run_partitions(resname, solvents, reps=3, t=298,
+def run_partitions(resname, solvents, reps=3, T=298,
                    output_dir='./Partitions', ncores=36, gmx='gmx',
                    states=DEFAULT_STATES):
     """
