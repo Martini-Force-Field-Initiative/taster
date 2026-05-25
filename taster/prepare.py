@@ -102,7 +102,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
 
 def prepare_partition_setup(cg_itp, cg_inputstructure,
                             solvents, reps=3,
-                            output_dir='./Partitions', gmx='gmx', d=1.5):
+                            output_dir='./Partitions', gmx='gmx', d=2.0):
     """
     Prepare the directory structure and input files for partition TI simulations.
 

@@ -22,7 +22,7 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
     reference : str, optional
         Name of the reference solvent to compute partitioning against.
         Must be present in solvents. Defaults to 'water'.
-    T : int
+    T : float
         Temperature (K) at which the partitioning will be run/calculated.
     reps : int, optional
         Number of replicates. Defaults to 3.
@@ -32,8 +32,6 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
         Root directory for all output. Defaults to './Partitions'.
     gmx : str, optional
         GROMACS executable name or path. Defaults to 'gmx'.
-    T : float, optional
-        Temperature in Kelvin. Defaults to 298.
     cutoff : int, optional
         Number of initial frames to discard as equilibration. Defaults to 5000.
     estimator : str, optional

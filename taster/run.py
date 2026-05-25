@@ -22,7 +22,7 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
         Lambda state index.
     workingdir : str or Path
         Path to the solvent directory containing system.gro and system.top.
-    T : int
+    T : float
         Temperature (K) at which simulations will be run.
     offset : int, optional
         CPU pin offset for mdrun. Defaults to 0.
@@ -120,7 +120,7 @@ def run_partitions(resname, solvents, reps=3, T=298,
         Solvent names to run.
     reps : int, optional
         Number of replicates. Defaults to 3.
-    T : int
+    T : float
         Temperature (K) at which simulations will be run.
     output_dir : str or Path, optional
         Root directory containing prepared partition files. Defaults to './Partitions'.
