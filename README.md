@@ -117,6 +117,18 @@ avg  hexadecane           -15.1    0.3      2.64    0.05
 
 ---
 
+## Testing
+
+To run the full test suite
+
+```bash
+pytest
+```
+
+This will run all tests in `tests/`. Some tests require GROMACS (`gmx`) in your `PATH` and may take longer to complete.
+
+---
+
 ## Notes on HPC Usage
 
 By default `ncores` is set to `os.cpu_count()`, which returns the total number of logical CPUs on the machine. On **shared HPC nodes** this will be the node's full core count.
