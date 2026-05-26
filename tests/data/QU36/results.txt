@@ -1,0 +1,13 @@
+Molecule: QU36
+Rep #1
+  octanol-water_74-26/water: 2.7040 +- 0.0123 LogP units
+  octanol-water_74-26/water: 15.4260 +- 0.0700 kJ/mol
+Rep #2
+  octanol-water_74-26/water: 2.5723 +- 0.0122 LogP units
+  octanol-water_74-26/water: 14.6744 +- 0.0696 kJ/mol
+Rep #3
+  octanol-water_74-26/water: 2.5627 +- 0.0122 LogP units
+  octanol-water_74-26/water: 14.6196 +- 0.0694 kJ/mol
+Average
+  octanol-water_74-26/water: 2.6130 +- 0.0071 LogP units
+  octanol-water_74-26/water: 14.9067 +- 0.0402 kJ/mol

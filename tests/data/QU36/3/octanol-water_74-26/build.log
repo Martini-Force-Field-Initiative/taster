@@ -1,0 +1,83 @@
+                     :-) GROMACS - gmx editconf, 2024.5 (-:
+
+Executable:   /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5/bin/gmx
+Data prefix:  /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5
+Working dir:  /local/saryee/clean_trjs/ALA_derivatives/Partitions 
+Command line:
+  gmx editconf -f '/local/saryee/clean_trjs/ALA_derivatives/Partitions /QU36.gro' -o '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system_.gro' -d 1.5 -bt dodecahedron
+
+Note that major changes are planned in future for editconf, to improve usability and utility.
+Read 5 atoms
+Volume: 0 nm^3, corresponds to roughly 0 electrons
+No velocities found
+    system size :  0.426  0.238  0.418 (nm)
+    diameter    :  0.527               (nm)
+    center      :  1.462  1.405  1.401 (nm)
+    box vectors :  0.000  0.000  0.000 (nm)
+    box angles  :   0.00   0.00   0.00 (degrees)
+    box volume  :   0.00               (nm^3)
+    shift       :  1.183  1.241 -0.154 (nm)
+new center      :  
+GROMACS reminds you: "A tidy laboratory means a lazy chemist." (J.J. Berzelius)
+
+2.646  2.646  1.247 (nm)
+new box vectors :  3.527  3.527  3.527 (nm)
+new box angles  :  60.00  60.00  90.00 (degrees)
+new box volume  :  31.03               (nm^3)
+                     :-) GROMACS - gmx solvate, 2024.5 (-:
+
+Executable:   /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5/bin/gmx
+Data prefix:  /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5
+Working dir:  /local/saryee/clean_trjs/ALA_derivatives/Partitions 
+Command line:
+  gmx solvate -cp '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system_.gro' -cs /local/saryee/clean_trjs/taster-main/taster/data/solvents/octanol-water_74-26.gro -o '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.gro' -p '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.top'
+
+Reading solute configuration
+Reading solvent configuration
+
+Initialising inter-atomic distances...
+
+WARNING: Masses and atomic (Van der Waals) radii will be guessed
+         based on residue and atom names, since they could not be
+         definitively assigned from the information in your input
+         files. These guessed numbers might deviate from the mass
+         and radius of the atom type. Please check the output
+         files if necessary. Note, that this functionality may
+         be removed in a future GROMACS version. Please, consider
+         using another file format for your input.
+
+NOTE: From version 5.0 gmx solvate uses the Van der Waals radii
+from the source below. This means the results may be different
+compared to previous GROMACS versions.
+
+++++ PLEASE READ AND CITE THE FOLLOWING REFERENCE ++++
+A. Bondi
+van der Waals Volumes and Radii
+J. Phys. Chem. 68 (1964) pp. 441-451
+-------- -------- --- Thank You --- -------- --------
+
+Generating solvent configuration
+Will generate new solvent configuration of 1x1x1 boxes
+Solvent box contains 698 atoms in 244 residues
+Removed 232 solvent atoms due to solvent-solvent overlap
+Removed 6 solvent atoms due to solute-solvent overlap
+Sorting configuration
+Found 2 different molecule types:
+    OCO (   3 atoms):   148 residues
+      W (   1 atoms):    16 residues
+Generated solvent containing 0 atoms in 0 residues
+Writing generated configuration to /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.gro
+
+Output configuration contains 465 atoms in 165 residues
+Volume                 :     31.0341 (nm^3)
+Density                :     601.475 (g/l)
+Number of solvent molecules:    164   
+
+Processing topology
+
+Back Off! I just backed up /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.top to /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/#system.top.1#
+
+GROMACS reminds you: "A tidy laboratory means a lazy chemist." (J.J. Berzelius)
+
+Adding line for 148 solvent molecules with resname (OCO) to topology file (/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.top)
+Adding line for 16 solvent molecules with resname (W) to topology file (/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/QU36/3/octanol-water_74-26/system.top)

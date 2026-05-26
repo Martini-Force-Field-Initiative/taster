@@ -1,0 +1,62 @@
+define                   = -DFLEXIBLE
+
+integrator              =  sd
+dt                      =  0.02
+nsteps                  =  1250000
+
+nstcomm                 =  100
+comm-grps               =  system
+
+nstlog                  =  0
+nstenergy               =  0
+nstxout-compressed      =  0
+
+cutoff-scheme            = Verlet
+nstlist                  = 20
+rlist                    = 1.35
+verlet-buffer-tolerance  = -1
+ns_type                  = grid
+pbc                      = xyz
+
+coulombtype              = reaction-field 
+rcoulomb                 = 1.1
+epsilon_r                = 15	; 2.5 (with polarizable water)
+epsilon_rf               = 0
+vdw_type                 = cutoff  
+vdw-modifier             = Potential-shift-verlet
+rvdw                     = 1.1
+
+tcoupl                  =  v-rescale
+tc-grps                 =  system
+tau-t                   =  1.0
+ref-t                   =  298
+continuation            =  yes
+gen-vel                 =  no
+
+pcoupl                  =  parrinello-rahman
+pcoupltype              =  isotropic
+tau-p                   =  12.0
+compressibility         =  3e-4
+ref-p                   =  1.0
+
+constraints              = none 
+constraint_algorithm     = Lincs
+lincs_order              = 12
+lincs_iter               = 4
+lincs_warnangle          = 90
+
+free-energy             =  yes
+
+couple-moltype          =  CPA3
+couple-lambda0          =  vdw-q
+couple-lambda1          =  none
+couple-intramol         =  no
+
+init-lambda-state       =  1
+fep-lambdas             =  0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.85 0.9 1.0
+calc-lambda-neighbors   =  -1
+
+sc-alpha                =  0.5
+sc-sigma                =  0.3
+
+

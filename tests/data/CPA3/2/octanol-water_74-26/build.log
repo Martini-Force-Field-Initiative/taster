@@ -1,0 +1,83 @@
+                     :-) GROMACS - gmx editconf, 2024.5 (-:
+
+Executable:   /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5/bin/gmx
+Data prefix:  /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5
+Working dir:  /local/saryee/clean_trjs/ALA_derivatives/Partitions 
+Command line:
+  gmx editconf -f '/local/saryee/clean_trjs/ALA_derivatives/Partitions /CPA3.gro' -o '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system_.gro' -d 1.5 -bt dodecahedron
+
+Note that major changes are planned in future for editconf, to improve usability and utility.
+Read 2 atoms
+Volume: 0 nm^3, corresponds to roughly 0 electrons
+No velocities found
+    system size :  0.090  0.094  0.231 (nm)
+    diameter    :  0.265               (nm)
+    center      :  1.895  1.351  1.947 (nm)
+    box vectors :  0.000  0.000  0.000 (nm)
+    box angles  :   0.00   0.00   0.00 (degrees)
+    box volume  :   0.00               (nm^3)
+    shift       :  0.554  1.098 -0.793 (nm)
+new center      :  
+GROMACS reminds you: "We had the quaint notion at the time that software should be completely, absolutely free of bugs. Unfortunately it's a notion that never really quite caught on." (Mary Allen Wilkes)
+
+2.449  2.449  1.154 (nm)
+new box vectors :  3.265  3.265  3.265 (nm)
+new box angles  :  60.00  60.00  90.00 (degrees)
+new box volume  :  24.61               (nm^3)
+                     :-) GROMACS - gmx solvate, 2024.5 (-:
+
+Executable:   /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5/bin/gmx
+Data prefix:  /DAMM/software/gromacs/trixie/AVX_512/gromacs-2024.5
+Working dir:  /local/saryee/clean_trjs/ALA_derivatives/Partitions 
+Command line:
+  gmx solvate -cp '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system_.gro' -cs /local/saryee/clean_trjs/taster-main/taster/data/solvents/octanol-water_74-26.gro -o '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.gro' -p '/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.top'
+
+Reading solute configuration
+Reading solvent configuration
+
+Initialising inter-atomic distances...
+
+WARNING: Masses and atomic (Van der Waals) radii will be guessed
+         based on residue and atom names, since they could not be
+         definitively assigned from the information in your input
+         files. These guessed numbers might deviate from the mass
+         and radius of the atom type. Please check the output
+         files if necessary. Note, that this functionality may
+         be removed in a future GROMACS version. Please, consider
+         using another file format for your input.
+
+NOTE: From version 5.0 gmx solvate uses the Van der Waals radii
+from the source below. This means the results may be different
+compared to previous GROMACS versions.
+
+++++ PLEASE READ AND CITE THE FOLLOWING REFERENCE ++++
+A. Bondi
+van der Waals Volumes and Radii
+J. Phys. Chem. 68 (1964) pp. 441-451
+-------- -------- --- Thank You --- -------- --------
+
+Generating solvent configuration
+Will generate new solvent configuration of 1x1x1 boxes
+Solvent box contains 558 atoms in 194 residues
+Removed 191 solvent atoms due to solvent-solvent overlap
+Removed 3 solvent atoms due to solute-solvent overlap
+Sorting configuration
+Found 2 different molecule types:
+    OCO (   3 atoms):   118 residues
+      W (   1 atoms):    10 residues
+Generated solvent containing 0 atoms in 0 residues
+Writing generated configuration to /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.gro
+
+Output configuration contains 366 atoms in 129 residues
+Volume                 :     24.6144 (nm^3)
+Density                :     566.139 (g/l)
+Number of solvent molecules:    128   
+
+Processing topology
+
+Back Off! I just backed up /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.top to /local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/#system.top.1#
+
+GROMACS reminds you: "We had the quaint notion at the time that software should be completely, absolutely free of bugs. Unfortunately it's a notion that never really quite caught on." (Mary Allen Wilkes)
+
+Adding line for 118 solvent molecules with resname (OCO) to topology file (/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.top)
+Adding line for 10 solvent molecules with resname (W) to topology file (/local/saryee/clean_trjs/ALA_derivatives/Partitions /Partitions/CPA3/2/octanol-water_74-26/system.top)

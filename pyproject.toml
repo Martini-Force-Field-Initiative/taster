@@ -35,3 +35,11 @@ taster = ["data/**/*"]
 
 [project.scripts]
 taster = "taster.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v --tb=short"
+markers   = [
+    "gmx:  mark test as requiring a working GROMACS installation",
+    "slow: mark test as long-running (excluded from the default run)",
+]
