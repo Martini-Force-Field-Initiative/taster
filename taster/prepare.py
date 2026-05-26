@@ -73,13 +73,13 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
               '-f', str(cg_inputstructure),
               '-o', str(workingdir / 'system_.gro'),
               '-d', str(d),
-              '-bt', 'dodecahedron'], log=log)
+              '-bt', 'dodecahedron'], log=log, cwd=workingdir)
 
         _run([gmx, 'solvate',
               '-cp', str(workingdir / 'system_.gro'),
               '-cs', str(SolventBox),
               '-o', str(workingdir / 'system.gro'),
-              '-p', str(workingdir / 'system.top')], log=log)
+              '-p', str(workingdir / 'system.top')], log=log, cwd=workingdir)
 
         if neutralize:
             _run([gmx, 'grompp',
@@ -87,7 +87,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
                   '-c', str(workingdir / 'system.gro'),
                   '-p', str(workingdir / 'system.top'),
                   '-o', str(workingdir / 'neutralize.tpr'),
-                  '-maxwarn', '-1'], log=log)
+                  '-maxwarn', '-1'], log=log, cwd=workingdir)
 
             solvent_resname = np.unique(md.Universe(str(SolventBox)).atoms.resnames)[0]
 
@@ -97,7 +97,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
                   '-p', str(workingdir / 'system.top'),
                   '-pname', 'NA', '-pq', '+1',
                   '-nname', 'CL', '-nq', '-1',
-                  '-neutral'], log=log, input_text=solvent_resname)
+                  '-neutral'], log=log, cwd=workingdir, input_text=solvent_resname)
 
 
 def prepare_partition_setup(cg_itp, cg_inputstructure,
