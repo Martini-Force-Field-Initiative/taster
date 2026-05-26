@@ -1,0 +1,14 @@
+name: taster
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python>=3.10
+  - setuptools<81
+  - numpy>=1.20
+  - pandas>=1.0
+  - mdanalysis>=2.0
+  - alchemlyb>=2.0
+  - pytest
+  - pytest-cov
+  - pip
