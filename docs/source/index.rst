@@ -63,7 +63,7 @@ free energy estimation using TI or MBAR, and LogP calculation relative to a refe
 Features
 --------
 
-- **Solvation box preparation** — Builds solvated Martini simulation boxes for of 
+- **Solvation box preparation** — Builds solvated Martini simulation boxes for 
   the bundled solvents (water, octanol-water 74:26, hexadecane, chloroform)
 - **Parallel FEP/TI simulations** — Runs all lambda states across solvents and replicates
   concurrently via GROMACS with semaphore-based CPU pinning
