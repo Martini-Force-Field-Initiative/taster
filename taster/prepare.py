@@ -87,7 +87,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
                   '-c', str(workingdir / 'system.gro'),
                   '-p', str(workingdir / 'system.top'),
                   '-o', str(workingdir / 'neutralize.tpr'),
-                  '-maxwarn', '-1'], log=log, cwd=workingdir)
+                  '-maxwarn', '100000'], log=log, cwd=workingdir)
 
             solvent_resname = np.unique(md.Universe(str(SolventBox)).atoms.resnames)[0]
 
