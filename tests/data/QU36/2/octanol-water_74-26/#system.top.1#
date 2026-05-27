@@ -1,9 +1,0 @@
-#include "/local/saryee/clean_trjs/taster-main/taster/data/itps/martini_v3.0.0.itp"
-#include "/local/saryee/clean_trjs/taster-main/taster/data/itps/martini_v3.0.0_solvents_v1.itp"
-#include "/local/saryee/clean_trjs/taster-main/taster/data/itps/martini_v3.0.0_ions_v1.itp"
-#include "/local/saryee/clean_trjs/ALA_derivatives/Partitions /sidechain.itp"
-[ system ]
-TI system built with Taster.
-
-[ molecules ]
-QU36    1
