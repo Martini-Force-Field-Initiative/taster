@@ -25,3 +25,9 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Sphinx documentation
+docs/build/
+docs/source/_apireference/_generated/
+docs/source/_modules/_generated/
+.doctrees/

@@ -1,3 +1,8 @@
+"""Command-line interface for taster.
+
+Exposes the ``taster`` command, which wraps :func:`taster.run_partition_workflow`
+and accepts all workflow parameters as command-line arguments.
+"""
 import argparse
 import sys
 from . import run_partition_workflow, available_solvents

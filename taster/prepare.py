@@ -1,3 +1,9 @@
+"""Solvated simulation box preparation for partition coefficient calculations.
+
+This module builds and solvates the simulation boxes and generates the GROMACS
+input files (topology, structure) needed to run thermodynamic integration across
+all requested solvents and replicates.
+"""
 import MDAnalysis as md
 from importlib.resources import files
 import numpy as np
