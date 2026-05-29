@@ -1,3 +1,9 @@
+"""Internal utility helpers used across the taster package.
+
+Contains thin wrappers around subprocess for running GROMACS commands,
+file-manipulation helpers for MDP template generation, and functions for
+locating bundled data and XVG output files.
+"""
 import subprocess
 from pathlib import Path
 from importlib.resources import files

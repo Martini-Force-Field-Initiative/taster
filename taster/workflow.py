@@ -1,3 +1,10 @@
+"""High-level orchestration of the full partition coefficient workflow.
+
+This module exposes ``run_partition_workflow``, the single entry point that
+sequentially calls :mod:`taster.prepare`, :mod:`taster.run`, and
+:mod:`taster.analysis` to produce LogP values from a molecule ITP and CG
+structure file.
+"""
 from .prepare import prepare_partition_setup
 from .run import run_partitions
 from .analysis import process_partition

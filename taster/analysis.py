@@ -1,3 +1,9 @@
+"""Free energy estimation and partition coefficient analysis.
+
+This module post-processes the GROMACS XVG output files from TI/FEP simulations,
+estimates free energy differences using TI or MBAR via alchemlyb, and computes
+LogP values relative to a reference solvent.
+"""
 import numpy as np
 import alchemlyb
 from pathlib import Path

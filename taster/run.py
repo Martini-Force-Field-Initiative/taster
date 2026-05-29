@@ -1,3 +1,9 @@
+"""Parallel execution of Martini FEP/TI simulations via GROMACS.
+
+This module drives the minimisation, relaxation, and FEP production runs for
+every lambda state, solvent, and replicate combination using Python
+multiprocessing with semaphore-based CPU pinning.
+"""
 import os
 from importlib.resources import files
 from pathlib import Path
