@@ -7,14 +7,14 @@ name = "taster"
 version = "0.1.0"
 description = "Martini CG free energy partition coefficient calculations."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Luís Borges Araújo", email = "you@example.com" }]
 
 dependencies = [
-  "numpy",
-  "pandas",
-  "MDAnalysis",
-  "alchemlyb",
+  "numpy>=1.20",
+  "pandas>=1.0",
+  "MDAnalysis>=2.0",
+  "alchemlyb>=2.0",
 ]
 
 [project.optional-dependencies]

@@ -1,3 +1,4 @@
+import os
 from importlib.resources import files
 from pathlib import Path
 from multiprocessing import Process, Semaphore
@@ -21,7 +22,7 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
         Lambda state index.
     workingdir : str or Path
         Path to the solvent directory containing system.gro and system.top.
-    T : int
+    T : float
         Temperature (K) at which simulations will be run.
     offset : int, optional
         CPU pin offset for mdrun. Defaults to 0.
@@ -104,8 +105,8 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, T=298):
         sem.release()
 
 
-def run_partitions(resname, solvents, reps=3, t=298,
-                   output_dir='./Partitions', ncores=36, gmx='gmx',
+def run_partitions(resname, solvents, reps=3, T=298,
+                   output_dir='./Partitions', ncores=None, gmx='gmx',
                    states=DEFAULT_STATES):
     """
     Run TI simulations for all lambda states, solvents, and replicates locally
@@ -119,18 +120,21 @@ def run_partitions(resname, solvents, reps=3, t=298,
         Solvent names to run.
     reps : int, optional
         Number of replicates. Defaults to 3.
-    T : int
+    T : float
         Temperature (K) at which simulations will be run.
     output_dir : str or Path, optional
         Root directory containing prepared partition files. Defaults to './Partitions'.
-    ncores : int, optional
-        Maximum number of concurrent processes. Defaults to 36.
+    ncores : int or None, optional
+        Maximum number of concurrent processes. Defaults to None (auto-detect
+        via os.cpu_count()).
     gmx : str, optional
         GROMACS executable name or path. Defaults to 'gmx'.
     states : list of int, optional
         Lambda states to run. Defaults to DEFAULT_STATES (0-11).
     """
     output_dir = Path(output_dir).resolve()
+    if ncores is None:
+        ncores = os.cpu_count() or 1
     sem        = Semaphore(ncores)
     processes  = []
     offset     = 0

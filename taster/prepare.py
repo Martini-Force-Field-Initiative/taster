@@ -73,13 +73,13 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
               '-f', str(cg_inputstructure),
               '-o', str(workingdir / 'system_.gro'),
               '-d', str(d),
-              '-bt', 'dodecahedron'], log=log)
+              '-bt', 'dodecahedron'], log=log, cwd=workingdir)
 
         _run([gmx, 'solvate',
               '-cp', str(workingdir / 'system_.gro'),
               '-cs', str(SolventBox),
               '-o', str(workingdir / 'system.gro'),
-              '-p', str(workingdir / 'system.top')], log=log)
+              '-p', str(workingdir / 'system.top')], log=log, cwd=workingdir)
 
         if neutralize:
             _run([gmx, 'grompp',
@@ -87,7 +87,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
                   '-c', str(workingdir / 'system.gro'),
                   '-p', str(workingdir / 'system.top'),
                   '-o', str(workingdir / 'neutralize.tpr'),
-                  '-maxwarn', '-1'], log=log)
+                  '-maxwarn', '100000'], log=log, cwd=workingdir)
 
             solvent_resname = np.unique(md.Universe(str(SolventBox)).atoms.resnames)[0]
 
@@ -97,12 +97,12 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
                   '-p', str(workingdir / 'system.top'),
                   '-pname', 'NA', '-pq', '+1',
                   '-nname', 'CL', '-nq', '-1',
-                  '-neutral'], log=log, input_text=solvent_resname)
+                  '-neutral'], log=log, cwd=workingdir, input_text=solvent_resname)
 
 
-def prepare_partition_setup(cg_itp, cg_inputstructure,
+def prepare_partition_setup(itp, structure,
                             solvents, reps=3,
-                            output_dir='./Partitions', gmx='gmx', d=1.5):
+                            output_dir='./Partitions', gmx='gmx', d=2.0):
     """
     Prepare the directory structure and input files for partition TI simulations.
 
@@ -111,9 +111,9 @@ def prepare_partition_setup(cg_itp, cg_inputstructure,
 
     Parameters
     ----------
-    cg_itp : str or Path
+    itp : str or Path
         Path to the molecule ITP file.
-    cg_inputstructure : str or Path
+    structure : str or Path
         Path to the input CG structure (must contain exactly one residue type).
     solvents : list of str
         Solvent names to prepare (must match GRO files in taster.data.solvents).
@@ -126,8 +126,8 @@ def prepare_partition_setup(cg_itp, cg_inputstructure,
     d : float, optional
         Minimum distance (nm) between the solute and the box edge. Defaults to 2.0.
     """
-    cg_itp            = Path(cg_itp).resolve()
-    cg_inputstructure = Path(cg_inputstructure).resolve()
+    cg_itp            = Path(itp).resolve()
+    cg_inputstructure = Path(structure).resolve()
     output_dir        = Path(output_dir).resolve()
 
     resnames = np.unique(md.Universe(str(cg_inputstructure)).atoms.resnames)

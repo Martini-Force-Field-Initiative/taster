@@ -12,9 +12,12 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 
 ## Requirements
 
-- Python >= 3.9
-- GROMACS (tested with 2023.x)
-- `numpy`, `pandas`, `MDAnalysis`, `alchemlyb`
+- Python >= 3.10
+- GROMACS (2024.3 or greater needed if topologies use angles with restricted bending potentials)
+- `numpy >= 1.20`
+- `pandas >= 1.0`
+- `MDAnalysis >= 2.0`
+- `alchemlyb >= 2.0`
 
 ---
 
@@ -111,6 +114,14 @@ rep  solvent               dG      dG_err   logP    logP_err
 avg  octanol-water_74-26  -12.3    0.2      2.16    0.04
 avg  hexadecane           -15.1    0.3      2.64    0.05
 ```
+
+---
+
+## Notes on HPC Usage
+
+By default `ncores` is set to `os.cpu_count()`, which returns the total number of logical CPUs on the machine. On **shared HPC nodes** this will be the node's full core count.
+
+Always pass `ncores` explicitly to match the resources available to your job.
 
 ---
 
