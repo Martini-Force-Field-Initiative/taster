@@ -24,7 +24,7 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/taster.git
+git clone https://github.com/GoCoarse-ENS-Lyon/taster.git
 cd taster
 pip install -e .
 ```
