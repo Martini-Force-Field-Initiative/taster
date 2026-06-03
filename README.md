@@ -1,6 +1,6 @@
 # taster
 
-**taster** is a Python package for computing partition coefficients of small molecules using Martini 3 coarse-grained molecular dynamics and thermodynamic integration (TI) free energy calculations.
+**taster** is a Python package for computing partition coefficients of Martini 3 small molecules using free energy calculations.
 
 Given a molecule's CG structure and ITP file, taster automates the full workflow:
 - Solvation box preparation across multiple solvents
