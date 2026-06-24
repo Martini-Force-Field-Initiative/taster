@@ -13,7 +13,7 @@ from .utils import _get_available_solvents
 
 def run_partition_workflow(itp, structure, solvents=None, reference='water',
                            T=298, reps=3, ncores=None, output_dir='./Partitions',
-                           gmx='gmx', cutoff=5000, estimator='MBAR'):
+                           gmx='gmx', cutoff=5000, estimator='MBAR', progress=True):
     """
     Run the full partition coefficient workflow: prepare, run, and analyse.
  
@@ -43,7 +43,9 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
         Number of initial frames to discard as equilibration. Defaults to 5000.
     estimator : str, optional
         Free energy estimator, 'TI' or 'MBAR'. Defaults to 'MBAR'.
- 
+    progress : bool, optional
+        Whether to display a tqdm progress bar while running. Defaults to True.
+
     Returns
     -------
     pandas.DataFrame
@@ -68,7 +70,7 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
                                       reps=reps, output_dir=output_dir, gmx=gmx)
  
     run_partitions(resname, solvents, reps=reps, ncores=ncores,
-                   output_dir=output_dir, gmx=gmx, T=T)
+                   output_dir=output_dir, gmx=gmx, T=T, progress=progress)
  
     return process_partition(resname, organic_solvents, water=reference,
                              reps=reps, output_dir=output_dir,

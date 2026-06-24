@@ -20,6 +20,7 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 - `matplotlib >= 3.5`
 - `MDAnalysis >= 2.0`
 - `alchemlyb >= 2.0`
+- `tqdm >= 4.60`
 
 ---
 
