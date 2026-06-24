@@ -123,7 +123,8 @@ def prepare_partition_setup(itp, structure,
     itp : str or Path
         Path to the molecule ITP file.
     structure : str or Path
-        Path to the input CG structure (must contain exactly one residue type).
+        Path to the input CG structure (must contain exactly one residue,
+        i.e. a single copy of the molecule).
     solvents : list of str
         Solvent names to prepare (must match GRO files in taster.data.solvents).
     reps : int, optional
@@ -144,19 +145,20 @@ def prepare_partition_setup(itp, structure,
     cg_inputstructure = Path(structure).resolve()
     output_dir        = Path(output_dir).resolve()
 
-    resnames = np.unique(md.Universe(str(cg_inputstructure)).atoms.resnames)
-    if len(resnames) != 1:
+    residues = md.Universe(str(cg_inputstructure)).residues
+    if len(residues) != 1:
         raise ValueError(
-            f"Expected exactly 1 residue name in {cg_inputstructure}, "
-            f"found {len(resnames)}: {list(resnames)}"
+            f"Expected exactly 1 residue (a single copy of the molecule) in "
+            f"{cg_inputstructure}, found {len(residues)}: "
+            f"{list(residues.resnames)}"
         )
 
     resname = _get_moleculetype_name(cg_itp)
-    if resnames[0] != resname:
+    if residues.resnames[0] != resname:
         warnings.warn(
-            f"Structure residue name '{resnames[0]}' does not match the ITP "
-            f"moleculetype name '{resname}'; using '{resname}' as the "
-            f"molecule name throughout."
+            f"Structure residue name '{residues.resnames[0]}' does not match "
+            f"the ITP moleculetype name '{resname}'; using '{resname}' as "
+            f"the molecule name throughout."
         )
 
     for rep in range(1, reps + 1):
