@@ -4,18 +4,21 @@ This module builds and solvates the simulation boxes and generates the GROMACS
 input files (topology, structure) needed to run thermodynamic integration across
 all requested solvents and replicates.
 """
+import warnings
 import MDAnalysis as md
 from importlib.resources import files
 import numpy as np
-from collections import Counter
 from pathlib import Path
-from .utils import _run
+from .utils import _run, _get_moleculetype_name
 
 
 def _write_topology(itp, structure, output='system.top',
                     FFitp=None, SolvITP=None, IonsITP=None):
     """
     Write a GROMACS topology file with Martini FF includes and molecule counts.
+
+    The molecule name written to `[ molecules ]` is taken from the ITP's
+    `[ moleculetype ]` section.
 
     Parameters
     ----------
@@ -43,9 +46,9 @@ def _write_topology(itp, structure, output='system.top',
         '[ molecules ]\n',
     ]
 
-    counts = Counter(md.Universe(str(structure)).atoms.residues.resnames)
-    for item, count in counts.items():
-        header.append(f"{item}    {count}\n")
+    molname  = _get_moleculetype_name(itp)
+    n_residues = len(md.Universe(str(structure)).atoms.residues)
+    header.append(f"{molname}    {n_residues}\n")
 
     with open(output, 'w') as topout:
         for line in header:
@@ -114,7 +117,7 @@ def prepare_partition_setup(itp, structure,
 
     Creates one solvated box and topology per solvent per replicate, under:
     output_dir / resname / rep / solvent /
-
+    
     Parameters
     ----------
     itp : str or Path
@@ -131,6 +134,11 @@ def prepare_partition_setup(itp, structure,
         GROMACS executable name or path. Defaults to 'gmx'.
     d : float, optional
         Minimum distance (nm) between the solute and the box edge. Defaults to 2.0.
+
+    Returns
+    -------
+    str
+        The molecule name, taken from the ITP's `[ moleculetype ]` section.
     """
     cg_itp            = Path(itp).resolve()
     cg_inputstructure = Path(structure).resolve()
@@ -142,7 +150,14 @@ def prepare_partition_setup(itp, structure,
             f"Expected exactly 1 residue name in {cg_inputstructure}, "
             f"found {len(resnames)}: {list(resnames)}"
         )
-    resname = resnames[0]
+
+    resname = _get_moleculetype_name(cg_itp)
+    if resnames[0] != resname:
+        warnings.warn(
+            f"Structure residue name '{resnames[0]}' does not match the ITP "
+            f"moleculetype name '{resname}'; using '{resname}' as the "
+            f"molecule name throughout."
+        )
 
     for rep in range(1, reps + 1):
         for solvent in solvents:

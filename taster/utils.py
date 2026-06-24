@@ -46,3 +46,31 @@ def _replace_words_in_file(original_file_path, new_file_path,
     for old, new in zip(words_to_replace, replacement_words, strict=True):
         content = content.replace(old, new)
     Path(new_file_path).write_text(content)
+
+
+def _get_moleculetype_name(itp_path):
+    """
+    Parse an ITP file and return the molecule name from its [ moleculetype ] section.
+
+    Parameters
+    ----------
+    itp_path : str or Path
+        Path to the ITP file.
+
+    Returns
+    -------
+    str
+        The molecule name (first field of the first data line under
+        [ moleculetype ]).
+    """
+    in_section = False
+    for line in Path(itp_path).read_text().splitlines():
+        stripped = line.split(';', 1)[0].strip()
+        if not stripped:
+            continue
+        if stripped.startswith('['):
+            in_section = stripped.strip('[] ').lower() == 'moleculetype'
+            continue
+        if in_section:
+            return stripped.split()[0]
+    raise ValueError(f"No [ moleculetype ] section found in {itp_path}")
