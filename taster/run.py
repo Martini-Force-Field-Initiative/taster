@@ -164,6 +164,9 @@ def run_partitions(resname, solvents, reps=3, T=298,
                                args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T))
                 proc.start()
                 processes.append(proc)
+                # Reap already-finished processes so they don't sit as
+                # zombies until the final join loop.
+                processes = [p for p in processes if p.exitcode is None]
 
     for proc in processes:
         proc.join()
