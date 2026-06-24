@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
+from tqdm import tqdm
 from loguru import logger as _logger
 from alchemlyb.parsing.gmx import extract_dHdl, extract_u_nk
 from alchemlyb.estimators import TI, MBAR
@@ -186,7 +187,7 @@ def _format_report(df, resname):
 def process_partition(resname, solvents, water='water', reps=1,
                       output_dir='./Partitions', T=298,
                       cutoff=5000, states=None, estimator='MBAR',
-                      diagnostics=True):
+                      diagnostics=True, progress=True):
     """
     Process partition coefficient TI simulations and compute LogP values.
  
@@ -219,6 +220,8 @@ def process_partition(resname, solvents, water='water', reps=1,
         If True, save convergence diagnostics (plus an MBAR overlap matrix
         or TI dhdl plot, depending on `estimator`) for every replicate/solvent
         leg under `<mol_dir>/diagnostics/<rep>/<solvent>/`. Defaults to True.
+    progress : bool, optional
+        Whether to display a tqdm progress bar. Defaults to True.
 
     Returns
     -------
@@ -236,12 +239,16 @@ def process_partition(resname, solvents, water='water', reps=1,
             return None
         return mol_dir / 'diagnostics' / str(rep) / solvent_name
 
+    total = reps * (1 + len(solvents))
+    pbar  = tqdm(total=total, desc=f"{resname} analysis", disable=not progress)
+
     for rep in range(1, reps + 1):
         # Compute dG for water reference
         water_dir          = mol_dir / str(rep) / water
         dG_water, err_water = TIRoutine(water_dir, T=T, cutoff=cutoff,
                                         states=states, estimator=estimator,
                                         diagnostics_dir=_diagnostics_dir(rep, water))
+        pbar.update(1)
 
         # Compute dG for each organic solvent and partition against water
         for solvent in solvents:
@@ -249,15 +256,18 @@ def process_partition(resname, solvents, water='water', reps=1,
             dG_solv, err_solv = TIRoutine(solvent_dir, T=T, cutoff=cutoff,
                                           states=states, estimator=estimator,
                                           diagnostics_dir=_diagnostics_dir(rep, solvent))
- 
+            pbar.update(1)
+
             partition_dG     = dG_solv - dG_water
             partition_dG_err = np.sqrt(err_solv**2 + err_water**2)
             logP             = partition_dG / (LN10 * kT)
             logP_err         = partition_dG_err / (LN10 * kT)
- 
+
             rows.append(dict(rep=str(rep), solvent=solvent,
                              dG=partition_dG, dG_err=partition_dG_err,
                              logP=logP, logP_err=logP_err))
+
+    pbar.close()
  
     df = pd.DataFrame(rows)
  

@@ -74,4 +74,5 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
  
     return process_partition(resname, organic_solvents, water=reference,
                              reps=reps, output_dir=output_dir,
-                             T=T, cutoff=cutoff, estimator=estimator)
+                             T=T, cutoff=cutoff, estimator=estimator,
+                             progress=progress)
