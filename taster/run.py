@@ -2,12 +2,13 @@
 
 This module drives the minimisation, relaxation, and FEP production runs for
 every lambda state, solvent, and replicate combination using Python
-multiprocessing with semaphore-based CPU pinning.
+multiprocessing, with a semaphore capping concurrency and a pool of CPU pin
+offsets shared across all running tasks.
 """
 import os
 from importlib.resources import files
 from pathlib import Path
-from multiprocessing import Process, Semaphore
+from multiprocessing import Process, Semaphore, Queue
 
 from .utils import _run, _replace_words_in_file
 
@@ -96,18 +97,23 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
             raise
 
 
-def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, T=298):
+def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool, T=298):
     """
-    Wrapper around _run_ti_state that releases the semaphore slot on completion.
+    Wrapper around _run_ti_state that releases the semaphore slot and CPU
+    pin offset on completion.
 
     Parameters
     ----------
     sem : multiprocessing.Semaphore
         Semaphore to release when the state finishes.
+    offset_pool : multiprocessing.Queue
+        Pool of free CPU pin offsets; `offset` is returned to it when the
+        state finishes, so it's only ever reused once actually free.
     """
     try:
         _run_ti_state(resname, state, workingdir, offset=offset, gmx=gmx, T=T)
     finally:
+        offset_pool.put(offset)
         sem.release()
 
 
@@ -116,7 +122,8 @@ def run_partitions(resname, solvents, reps=3, T=298,
                    states=DEFAULT_STATES):
     """
     Run TI simulations for all lambda states, solvents, and replicates locally
-    using multiprocessing with semaphore-based core pinning.
+    using multiprocessing, with a semaphore capping concurrency and a pool of
+    CPU pin offsets handed out to whichever task starts next.
 
     Parameters
     ----------
@@ -141,20 +148,22 @@ def run_partitions(resname, solvents, reps=3, T=298,
     output_dir = Path(output_dir).resolve()
     if ncores is None:
         ncores = os.cpu_count() or 1
-    sem        = Semaphore(ncores)
-    processes  = []
-    offset     = 0
+    sem         = Semaphore(ncores)
+    offset_pool = Queue()
+    for i in range(ncores):
+        offset_pool.put(i)
+    processes   = []
 
     for rep in range(1, reps + 1):
         for solvent in solvents:
             workingdir = output_dir / resname / str(rep) / solvent
             for state in states:
                 sem.acquire()
+                offset = offset_pool.get()
                 proc = Process(target=_tracked_ti_state,
-                               args=(resname, state, workingdir, offset % ncores, gmx, sem, T))
+                               args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T))
                 proc.start()
                 processes.append(proc)
-                offset += 1
 
     for proc in processes:
         proc.join()

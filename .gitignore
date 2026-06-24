@@ -21,6 +21,7 @@ htmlcov/
 *.swp
 *.swo
 .ipynb_checkpoints/
+.claude/ 
 
 # OS
 .DS_Store
