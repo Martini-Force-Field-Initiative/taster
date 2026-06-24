@@ -4,12 +4,16 @@ This module post-processes the GROMACS XVG output files from TI/FEP simulations,
 estimates free energy differences using TI or MBAR via alchemlyb, and computes
 LogP values relative to a reference solvent.
 """
+import warnings
+from contextlib import contextmanager
+
 import numpy as np
 import alchemlyb
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
+from loguru import logger as _logger
 from alchemlyb.parsing.gmx import extract_dHdl, extract_u_nk
 from alchemlyb.estimators import TI, MBAR
 from alchemlyb.convergence import forward_backward_convergence
@@ -24,6 +28,30 @@ from .utils import _find_xvg_files
 RT     = 0.008314  # kJ/mol/K
 LN10   = np.log(10)
 
+# alchemlyb logs convergence progress via loguru, and pandas/alchemlyb raise
+# FutureWarnings during fitting. Both go to stderr by default and drown out
+# the terminal during convergence analysis, so route them into a log file
+# next to the diagnostic figures instead.
+_logger.remove()
+warnings.showwarning = lambda message, category, filename, lineno, file=None, line=None: \
+    _logger.warning(f"{category.__name__}: {message} ({filename}:{lineno})")
+
+
+@contextmanager
+def _diagnostics_log(diagnostics_dir):
+    """Redirect loguru/warnings output to `<diagnostics_dir>/convergence.log`."""
+    if diagnostics_dir is None:
+        yield
+        return
+    diagnostics_dir = Path(diagnostics_dir)
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    sink_id = _logger.add(diagnostics_dir / 'convergence.log', mode='a')
+    try:
+        yield
+    finally:
+        _logger.remove(sink_id)
+
+
 def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
     """
     Compute and save convergence/overlap diagnostic figures for a single
@@ -32,7 +60,7 @@ def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
     Parameters
     ----------
     diagnostics_dir : str or Path
-        Directory to save the figures in. Created if it doesn't exist.
+        Directory to save the figures in.
     estimator_name : str
         Either 'TI' or 'MBAR'.
     data_list : list of pandas.DataFrame
@@ -41,7 +69,6 @@ def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
         The fitted estimator.
     """
     diagnostics_dir = Path(diagnostics_dir)
-    diagnostics_dir.mkdir(parents=True, exist_ok=True)
     prefix = estimator_name.lower()
 
     convergence_df = forward_backward_convergence(data_list, estimator=estimator_name)
@@ -103,16 +130,17 @@ def TIRoutine(workingdir, T=298, cutoff=5000,
     kT = RT * T
 
     def _extract(estimator_name):
-        if estimator_name == 'MBAR':
-            data_list = [extract_u_nk(str(f), T=T)[cutoff:] for f in xvg_files]
-            result = MBAR().fit(alchemlyb.concat(data_list))
-        else:
-            data_list = [extract_dHdl(str(f), T=T)[cutoff:] for f in xvg_files]
-            result = TI().fit(alchemlyb.concat(data_list))
-        dG    = result.delta_f_.loc[0.00, 1.00] * kT
-        error = result.d_delta_f_.loc[0.00, 1.00] * kT
-        if diagnostics_dir is not None:
-            _save_diagnostics(diagnostics_dir, estimator_name, data_list, result)
+        with _diagnostics_log(diagnostics_dir):
+            if estimator_name == 'MBAR':
+                data_list = [extract_u_nk(str(f), T=T)[cutoff:] for f in xvg_files]
+                result = MBAR().fit(alchemlyb.concat(data_list))
+            else:
+                data_list = [extract_dHdl(str(f), T=T)[cutoff:] for f in xvg_files]
+                result = TI().fit(alchemlyb.concat(data_list))
+            dG    = result.delta_f_.loc[0.00, 1.00] * kT
+            error = result.d_delta_f_.loc[0.00, 1.00] * kT
+            if diagnostics_dir is not None:
+                _save_diagnostics(diagnostics_dir, estimator_name, data_list, result)
         return dG, error
 
     if estimator == 'both':
