@@ -11,6 +11,12 @@ import numpy as np
 from pathlib import Path
 from .utils import _run, _get_moleculetype_name
 
+# Input structures often have no box vectors, so MDAnalysis's 
+# missing-unit-cell warnings here are expected noise, not something
+# to act on.
+warnings.filterwarnings('ignore', message='Empty box.*', category=UserWarning)
+warnings.filterwarnings('ignore', message='.*missing dimension.*', category=UserWarning)
+
 
 def _write_topology(itp, structure, output='system.top',
                     FFitp=None, SolvITP=None, IonsITP=None):
