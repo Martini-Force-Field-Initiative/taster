@@ -9,9 +9,9 @@ import MDAnalysis as md
 from importlib.resources import files
 import numpy as np
 from pathlib import Path
-from .utils import _run, _get_moleculetype_name
+from .utils import _run, _get_moleculetype_name, _get_moleculetype_names, _default_ff_itps
 
-# Input structures often have no box vectors, so MDAnalysis's 
+# Input structures often have no box vectors, so MDAnalysis's
 # missing-unit-cell warnings here are expected noise, not something
 # to act on.
 warnings.filterwarnings('ignore', message='Empty box.*', category=UserWarning)
@@ -37,9 +37,10 @@ def _write_topology(itp, structure, output='system.top',
     FFitp, SolvITP, IonsITP : str or Path, optional
         Paths to Martini FF ITP files. Defaults to bundled taster data.
     """
-    if FFitp is None:   FFitp   = files("taster.data.itps") / "martini_v3.0.0.itp"
-    if SolvITP is None: SolvITP = files("taster.data.itps") / "martini_v3.0.0_solvents_v1.itp"
-    if IonsITP is None: IonsITP = files("taster.data.itps") / "martini_v3.0.0_ions_v1.itp"
+    default_FFitp, default_SolvITP, default_IonsITP = _default_ff_itps()
+    if FFitp is None:   FFitp   = default_FFitp
+    if SolvITP is None: SolvITP = default_SolvITP
+    if IonsITP is None: IonsITP = default_IonsITP
 
     header = [
         f'#include "{FFitp}"\n',
@@ -165,6 +166,17 @@ def prepare_partition_setup(itp, structure,
             f"Structure residue name '{residues.resnames[0]}' does not match "
             f"the ITP moleculetype name '{resname}'; using '{resname}' as "
             f"the molecule name throughout."
+        )
+
+    _, default_SolvITP, default_IonsITP = _default_ff_itps()
+    reserved_names = {*_get_moleculetype_names(default_SolvITP),
+                      *_get_moleculetype_names(default_IonsITP)}
+    if resname in reserved_names:
+        warnings.warn(
+            f"Molecule name '{resname}' collides with a moleculetype already "
+            f"defined in the bundled Martini solvent/ion ITPs; grompp will "
+            f"fail to build a topology that includes both. Rename the "
+            f"moleculetype in your ITP to something else."
         )
 
     for rep in range(1, reps + 1):

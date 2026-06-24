@@ -26,6 +26,15 @@ def _get_available_solvents():
             if f.name.endswith('.gro')}
 
 
+def _default_ff_itps():
+    """Return the bundled (FFitp, SolvITP, IonsITP) default ITP paths."""
+    return (
+        files("taster.data.itps") / "martini_v3.0.0.itp",
+        files("taster.data.itps") / "martini_v3.0.0_solvents_v1.itp",
+        files("taster.data.itps") / "martini_v3.0.0_ions_v1.itp",
+    )
+
+
 def _replace_words_in_file(original_file_path, new_file_path,
                            words_to_replace, replacement_words):
     """
@@ -48,6 +57,37 @@ def _replace_words_in_file(original_file_path, new_file_path,
     Path(new_file_path).write_text(content)
 
 
+def _get_moleculetype_names(itp_path):
+    """
+    Parse an ITP file and return every molecule name defined across all of
+    its [ moleculetype ] sections.
+
+    Parameters
+    ----------
+    itp_path : str or Path
+        Path to the ITP file.
+
+    Returns
+    -------
+    list of str
+        The molecule name (first field of the first data line) for each
+        [ moleculetype ] section found, in file order.
+    """
+    names = []
+    in_section = False
+    for line in Path(itp_path).read_text().splitlines():
+        stripped = line.split(';', 1)[0].strip()
+        if not stripped:
+            continue
+        if stripped.startswith('['):
+            in_section = stripped.strip('[] ').lower() == 'moleculetype'
+            continue
+        if in_section:
+            names.append(stripped.split()[0])
+            in_section = False
+    return names
+
+
 def _get_moleculetype_name(itp_path):
     """
     Parse an ITP file and return the molecule name from its [ moleculetype ] section.
@@ -63,14 +103,7 @@ def _get_moleculetype_name(itp_path):
         The molecule name (first field of the first data line under
         [ moleculetype ]).
     """
-    in_section = False
-    for line in Path(itp_path).read_text().splitlines():
-        stripped = line.split(';', 1)[0].strip()
-        if not stripped:
-            continue
-        if stripped.startswith('['):
-            in_section = stripped.strip('[] ').lower() == 'moleculetype'
-            continue
-        if in_section:
-            return stripped.split()[0]
-    raise ValueError(f"No [ moleculetype ] section found in {itp_path}")
+    names = _get_moleculetype_names(itp_path)
+    if not names:
+        raise ValueError(f"No [ moleculetype ] section found in {itp_path}")
+    return names[0]
