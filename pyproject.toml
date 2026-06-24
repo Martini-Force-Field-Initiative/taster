@@ -13,6 +13,7 @@ authors = [{ name = "Luís Borges Araújo", email = "you@example.com" }]
 dependencies = [
   "numpy>=1.20",
   "pandas>=1.0",
+  "matplotlib>=3.5",
   "MDAnalysis>=2.0",
   "alchemlyb>=2.0",
 ]
