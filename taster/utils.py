@@ -46,24 +46,3 @@ def _replace_words_in_file(original_file_path, new_file_path,
     for old, new in zip(words_to_replace, replacement_words, strict=True):
         content = content.replace(old, new)
     Path(new_file_path).write_text(content)
-
-    
-def _find_xvg_files(workingdir):
-    """
-    Recursively find all XVG files in a directory, ignoring hidden directories.
- 
-    Parameters
-    ----------
-    workingdir : str or Path
-        Directory to search.
- 
-    Returns
-    -------
-    list of Path
-        All XVG files found.
-    """
-    workingdir = Path(workingdir)
-    return [
-        f for f in workingdir.rglob('*.xvg')
-        if not any(part.startswith('.') for part in f.parts)
-    ]

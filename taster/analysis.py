@@ -8,6 +8,7 @@ import warnings
 from contextlib import contextmanager
 
 import numpy as np
+import pandas as pd
 import alchemlyb
 import matplotlib
 matplotlib.use('Agg')
@@ -22,7 +23,6 @@ from alchemlyb.visualisation import (
 )
 
 from .run import DEFAULT_STATES
-from .utils import _find_xvg_files
 
 
 RT     = 0.008314  # kJ/mol/K
@@ -226,8 +226,6 @@ def process_partition(resname, solvents, water='water', reps=3,
         DataFrame with columns: rep, solvent, dG, dG_err, logP, logP_err.
         Includes per-replicate rows and a final 'avg' row per solvent.
     """
-    import pandas as pd
-
     output_dir = Path(output_dir).resolve()
     mol_dir    = output_dir / resname
     kT         = RT * T
