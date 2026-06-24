@@ -117,7 +117,7 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
 
 
 def prepare_partition_setup(itp, structure,
-                            solvents, reps=3,
+                            solvents, reps=1,
                             output_dir='./Partitions', gmx='gmx', d=2.0):
     """
     Prepare the directory structure and input files for partition TI simulations.
@@ -135,7 +135,7 @@ def prepare_partition_setup(itp, structure,
     solvents : list of str
         Solvent names to prepare (must match GRO files in taster.data.solvents).
     reps : int, optional
-        Number of replicates to prepare. Defaults to 3.
+        Number of replicates to prepare. Defaults to 1.
     output_dir : str or Path, optional
         Root directory for output. Defaults to './Partitions'.
     gmx : str, optional

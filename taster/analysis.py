@@ -183,7 +183,7 @@ def _format_report(df, resname):
     return ''.join(lines)
  
  
-def process_partition(resname, solvents, water='water', reps=3,
+def process_partition(resname, solvents, water='water', reps=1,
                       output_dir='./Partitions', T=298,
                       cutoff=5000, states=None, estimator='MBAR',
                       diagnostics=True):
@@ -204,7 +204,7 @@ def process_partition(resname, solvents, water='water', reps=3,
     water : str, optional
         Name of the water solvent directory. Defaults to 'water'.
     reps : int, optional
-        Number of replicates. Defaults to 3.
+        Number of replicates. Defaults to 1.
     output_dir : str or Path, optional
         Root directory containing simulation output. Defaults to './Partitions'.
     T : float, optional

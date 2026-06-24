@@ -24,7 +24,7 @@ def main():
                              f'Defaults to all available.')
     parser.add_argument('--reference', default='water',
                         help='Reference solvent for partition coefficient.')
-    parser.add_argument('--reps', type=int, default=3,
+    parser.add_argument('--reps', type=int, default=1,
                         help='Number of replicates.')
     parser.add_argument('--ncores', type=int, default=None,
                         help='Number of parallel processes. Defaults to auto-detect.')

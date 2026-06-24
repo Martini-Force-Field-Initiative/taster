@@ -12,7 +12,7 @@ from .utils import _get_available_solvents
 
 
 def run_partition_workflow(itp, structure, solvents=None, reference='water',
-                           T=298, reps=3, ncores=None, output_dir='./Partitions',
+                           T=298, reps=1, ncores=None, output_dir='./Partitions',
                            gmx='gmx', cutoff=5000, estimator='MBAR', progress=True):
     """
     Run the full partition coefficient workflow: prepare, run, and analyse.
@@ -32,7 +32,7 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
     T : float
         Temperature (K) at which the partitioning will be run/calculated.
     reps : int, optional
-        Number of replicates. Defaults to 3.
+        Number of replicates. Defaults to 1.
     ncores : int or None, optional
         Number of parallel processes. Defaults to None (auto-detect).
     output_dir : str or Path, optional

@@ -119,7 +119,7 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool,
         sem.release()
 
 
-def run_partitions(resname, solvents, reps=3, T=298,
+def run_partitions(resname, solvents, reps=1, T=298,
                    output_dir='./Partitions', ncores=None, gmx='gmx',
                    states=DEFAULT_STATES, progress=True):
     """
@@ -134,7 +134,7 @@ def run_partitions(resname, solvents, reps=3, T=298,
     solvents : list of str
         Solvent names to run.
     reps : int, optional
-        Number of replicates. Defaults to 3.
+        Number of replicates. Defaults to 1.
     T : float
         Temperature (K) at which simulations will be run.
     output_dir : str or Path, optional
