@@ -2,12 +2,15 @@
 
 This module drives the minimisation, relaxation, and FEP production runs for
 every lambda state, solvent, and replicate combination using Python
-multiprocessing with semaphore-based CPU pinning.
+multiprocessing, with a semaphore capping concurrency and a pool of CPU pin
+offsets shared across all running tasks.
 """
 import os
 from importlib.resources import files
 from pathlib import Path
-from multiprocessing import Process, Semaphore
+from multiprocessing import Process, Semaphore, Queue
+
+from tqdm import tqdm
 
 from .utils import _run, _replace_words_in_file
 
@@ -96,27 +99,33 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
             raise
 
 
-def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, T=298):
+def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool, T=298):
     """
-    Wrapper around _run_ti_state that releases the semaphore slot on completion.
+    Wrapper around _run_ti_state that releases the semaphore slot and CPU
+    pin offset on completion.
 
     Parameters
     ----------
     sem : multiprocessing.Semaphore
         Semaphore to release when the state finishes.
+    offset_pool : multiprocessing.Queue
+        Pool of free CPU pin offsets; `offset` is returned to it when the
+        state finishes, so it's only ever reused once actually free.
     """
     try:
         _run_ti_state(resname, state, workingdir, offset=offset, gmx=gmx, T=T)
     finally:
+        offset_pool.put(offset)
         sem.release()
 
 
-def run_partitions(resname, solvents, reps=3, T=298,
+def run_partitions(resname, solvents, reps=1, T=298,
                    output_dir='./Partitions', ncores=None, gmx='gmx',
-                   states=DEFAULT_STATES):
+                   states=DEFAULT_STATES, progress=True):
     """
     Run TI simulations for all lambda states, solvents, and replicates locally
-    using multiprocessing with semaphore-based core pinning.
+    using multiprocessing, with a semaphore capping concurrency and a pool of
+    CPU pin offsets handed out to whichever task starts next.
 
     Parameters
     ----------
@@ -125,7 +134,7 @@ def run_partitions(resname, solvents, reps=3, T=298,
     solvents : list of str
         Solvent names to run.
     reps : int, optional
-        Number of replicates. Defaults to 3.
+        Number of replicates. Defaults to 1.
     T : float
         Temperature (K) at which simulations will be run.
     output_dir : str or Path, optional
@@ -137,24 +146,61 @@ def run_partitions(resname, solvents, reps=3, T=298,
         GROMACS executable name or path. Defaults to 'gmx'.
     states : list of int, optional
         Lambda states to run. Defaults to DEFAULT_STATES (0-11).
+    progress : bool, optional
+        Whether to display a tqdm progress bar. Defaults to True.
+
+    Raises
+    ------
+    RuntimeError
+        If one or more lambda states failed. Lists every failed
+        (rep, solvent, state) combination and the path to its log.out.
     """
     output_dir = Path(output_dir).resolve()
     if ncores is None:
         ncores = os.cpu_count() or 1
-    sem        = Semaphore(ncores)
-    processes  = []
-    offset     = 0
+    sem         = Semaphore(ncores)
+    offset_pool = Queue()
+    for i in range(ncores):
+        offset_pool.put(i)
+    tasks    = []
+    failures = []
+    total    = reps * len(solvents) * len(states)
+    pbar     = tqdm(total=total, desc=f"{resname} TI runs", disable=not progress)
+
+    def _reap(pending):
+        """Drop finished tasks, updating the progress bar and failure list."""
+        remaining = []
+        for proc, rep, solvent, state in pending:
+            if proc.exitcode is None:
+                remaining.append((proc, rep, solvent, state))
+                continue
+            pbar.update(1)
+            if proc.exitcode != 0:
+                log_path = output_dir / resname / str(rep) / solvent / str(state) / 'log.out'
+                failures.append((rep, solvent, state, log_path))
+        return remaining
 
     for rep in range(1, reps + 1):
         for solvent in solvents:
             workingdir = output_dir / resname / str(rep) / solvent
             for state in states:
                 sem.acquire()
+                offset = offset_pool.get()
                 proc = Process(target=_tracked_ti_state,
-                               args=(resname, state, workingdir, offset % ncores, gmx, sem, T))
+                               args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T))
                 proc.start()
-                processes.append(proc)
-                offset += 1
+                tasks.append((proc, rep, solvent, state))
+                # Reap already-finished tasks so they don't sit as zombies
+                # until the final join loop.
+                tasks = _reap(tasks)
 
-    for proc in processes:
+    for proc, rep, solvent, state in tasks:
         proc.join()
+    _reap(tasks)
+    pbar.close()
+
+    if failures:
+        lines = [f"{len(failures)} of {total} TI state(s) failed:"]
+        for rep, solvent, state, log_path in failures:
+            lines.append(f"  rep {rep}, solvent '{solvent}', state {state} (see {log_path})")
+        raise RuntimeError("\n".join(lines))

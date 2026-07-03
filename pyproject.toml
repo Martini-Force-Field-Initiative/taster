@@ -13,14 +13,17 @@ authors = [{ name = "Luís Borges Araújo", email = "you@example.com" }]
 dependencies = [
   "numpy>=1.20",
   "pandas>=1.0",
+  "matplotlib>=3.5",
   "MDAnalysis>=2.0",
   "alchemlyb>=2.0",
+  "tqdm>=4.60",
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest",
   "pytest-cov",
+  "alchemtest",
 ]
 docs = [
   "sphinx",
@@ -42,3 +45,6 @@ taster = ["data/**/*"]
 
 [project.scripts]
 taster = "taster.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
