@@ -2,7 +2,7 @@ define                   = -DFLEXIBLE
 
 integrator              =  sd
 dt                      =  0.02
-nsteps                  =  1250000
+nsteps                  =  NSTEPS
 
 nstcomm                 =  100
 comm-grps               =  system

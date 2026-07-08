@@ -38,6 +38,8 @@ def main():
                         help='Number of initial frames to discard as equilibration.')
     parser.add_argument('--estimator', default='MBAR', choices=['TI', 'MBAR'],
                         help='Free energy estimator.')
+    parser.add_argument('--nsteps', type=int, default=1250000,
+                        help='Number of steps for the FEP production run (default 1250000 = 25 ns at dt=0.02 ps).')
 
     args = parser.parse_args()
 
@@ -54,6 +56,7 @@ def main():
             T=args.temperature,
             cutoff=args.cutoff,
             estimator=args.estimator,
+            nsteps=args.nsteps,
         )
         print(df.to_string(index=False))
 

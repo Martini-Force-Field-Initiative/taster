@@ -19,6 +19,7 @@ DEFAULT_STATES = list(range(12))
 
 
 def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
+                  nsteps=1250000,
                   fep_min_mdp=None, fep_rel_mdp=None, fep_prod_mdp=None):
     """
     Run minimization, relaxation, and FEP production for a single lambda state.
@@ -37,6 +38,9 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
         CPU pin offset for mdrun. Defaults to 0.
     gmx : str, optional
         GROMACS executable name or path. Defaults to 'gmx'.
+    nsteps : int, optional
+        Number of steps for the FEP production run. Defaults to 1250000 (25 ns
+        at dt=0.02 ps). Does not affect minimization or relaxation lengths.
     fep_min_mdp, fep_rel_mdp, fep_prod_mdp : str or Path, optional
         Paths to MDP template files. Defaults to bundled taster templates.
     """
@@ -51,7 +55,7 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
     # Write MDP files with molecule name and lambda state substituted
     _replace_words_in_file(fep_min_mdp,  state_dir / 'min.mdp', ['MOL', 'INIT-LAMBDA-STATE'], [resname, str(state)])
     _replace_words_in_file(fep_rel_mdp,  state_dir / 'rel.mdp', ['MOL', 'INIT-LAMBDA-STATE', 'TEMPERATURE'], [resname, str(state), str(T)])
-    _replace_words_in_file(fep_prod_mdp, state_dir / 'fep.mdp', ['MOL', 'INIT-LAMBDA-STATE', 'TEMPERATURE'], [resname, str(state), str(T)])
+    _replace_words_in_file(fep_prod_mdp, state_dir / 'fep.mdp', ['MOL', 'INIT-LAMBDA-STATE', 'TEMPERATURE', 'NSTEPS'], [resname, str(state), str(T), str(nsteps)])
 
     system_gro = workingdir / 'system.gro'
     system_top = workingdir / 'system.top'
@@ -99,7 +103,7 @@ def _run_ti_state(resname, state, workingdir, offset=0, gmx='gmx', T=298,
             raise
 
 
-def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool, T=298):
+def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool, T=298, nsteps=1250000):
     """
     Wrapper around _run_ti_state that releases the semaphore slot and CPU
     pin offset on completion.
@@ -113,7 +117,7 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool,
         state finishes, so it's only ever reused once actually free.
     """
     try:
-        _run_ti_state(resname, state, workingdir, offset=offset, gmx=gmx, T=T)
+        _run_ti_state(resname, state, workingdir, offset=offset, gmx=gmx, T=T, nsteps=nsteps)
     finally:
         offset_pool.put(offset)
         sem.release()
@@ -121,7 +125,7 @@ def _tracked_ti_state(resname, state, workingdir, offset, gmx, sem, offset_pool,
 
 def run_partitions(resname, solvents, reps=1, T=298,
                    output_dir='./Partitions', ncores=None, gmx='gmx',
-                   states=DEFAULT_STATES, progress=True):
+                   states=DEFAULT_STATES, nsteps=1250000, progress=True):
     """
     Run TI simulations for all lambda states, solvents, and replicates locally
     using multiprocessing, with a semaphore capping concurrency and a pool of
@@ -146,6 +150,9 @@ def run_partitions(resname, solvents, reps=1, T=298,
         GROMACS executable name or path. Defaults to 'gmx'.
     states : list of int, optional
         Lambda states to run. Defaults to DEFAULT_STATES (0-11).
+    nsteps : int, optional
+        Number of steps for the FEP production run. Defaults to 1250000 (25 ns
+        at dt=0.02 ps). Does not affect minimization or relaxation lengths.
     progress : bool, optional
         Whether to display a tqdm progress bar. Defaults to True.
 
@@ -187,7 +194,7 @@ def run_partitions(resname, solvents, reps=1, T=298,
                 sem.acquire()
                 offset = offset_pool.get()
                 proc = Process(target=_tracked_ti_state,
-                               args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T))
+                               args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T, nsteps))
                 proc.start()
                 tasks.append((proc, rep, solvent, state))
                 # Reap already-finished tasks so they don't sit as zombies
