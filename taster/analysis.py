@@ -53,7 +53,7 @@ def _diagnostics_log(diagnostics_dir):
         _logger.remove(sink_id)
 
 
-def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
+def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result, kT):
     """
     Compute and save convergence/overlap diagnostic figures for a single
     TI or MBAR free energy estimate.
@@ -68,12 +68,19 @@ def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
         Per-state dHdl (TI) or u_nk (MBAR) DataFrames used to fit `result`.
     result : alchemlyb.estimators.TI or alchemlyb.estimators.MBAR
         The fitted estimator.
+    kT : float
+        Thermal energy in kJ/mol used to convert alchemlyb's native kT units.
     """
     diagnostics_dir = Path(diagnostics_dir)
     prefix = estimator_name.lower()
 
     convergence_df = forward_backward_convergence(data_list, estimator=estimator_name)
+    convergence_df = convergence_df * kT
     ax = plot_convergence(convergence_df)
+    ax.set_ylabel(r'$\Delta G$ (kJ/mol)')
+    ymin, ymax = ax.get_ylim()
+    margin = (ymax - ymin) * 0.15
+    ax.set_ylim(ymin - margin, ymax + margin)
     ax.figure.savefig(diagnostics_dir / f'{prefix}_convergence.png', dpi=300, bbox_inches='tight')
     plt.close(ax.figure)
 
@@ -141,7 +148,7 @@ def TIRoutine(workingdir, T=298, cutoff=5000,
             dG    = result.delta_f_.loc[0.00, 1.00] * kT
             error = result.d_delta_f_.loc[0.00, 1.00] * kT
             if diagnostics_dir is not None:
-                _save_diagnostics(diagnostics_dir, estimator_name, data_list, result)
+                _save_diagnostics(diagnostics_dir, estimator_name, data_list, result, kT)
         return dG, error
 
     if estimator == 'both':
