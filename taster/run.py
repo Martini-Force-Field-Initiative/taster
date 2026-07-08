@@ -6,6 +6,7 @@ multiprocessing, with a semaphore capping concurrency and a pool of CPU pin
 offsets shared across all running tasks.
 """
 import os
+import time
 from importlib.resources import files
 from pathlib import Path
 from multiprocessing import Process, Semaphore, Queue
@@ -181,6 +182,7 @@ def run_partitions(resname, solvents, reps=1, T=298,
             if proc.exitcode is None:
                 remaining.append((proc, rep, solvent, state))
                 continue
+            proc.join()
             pbar.update(1)
             if proc.exitcode != 0:
                 log_path = output_dir / resname / str(rep) / solvent / str(state) / 'log.out'
@@ -201,9 +203,10 @@ def run_partitions(resname, solvents, reps=1, T=298,
                 # until the final join loop.
                 tasks = _reap(tasks)
 
-    for proc, rep, solvent, state in tasks:
-        proc.join()
-    _reap(tasks)
+    while tasks:
+        tasks = _reap(tasks)
+        if tasks:
+            time.sleep(5)
     pbar.close()
 
     if failures:
