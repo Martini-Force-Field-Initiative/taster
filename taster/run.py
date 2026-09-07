@@ -167,7 +167,7 @@ def run_partitions(resname, solvents, reps=1, T=298,
         ncores = os.cpu_count() or 1
     # Workers only shell out to gmx, so spawn avoids forking a possibly
     # multi-threaded parent (e.g. once alchemlyb/JAX have been imported).
-    ctx         = multiprocessing.get_context("spawn")
+    ctx         = multiprocessing.get_context("fork")
     sem         = ctx.Semaphore(ncores)
     offset_pool = ctx.Queue()
     for i in range(ncores):
