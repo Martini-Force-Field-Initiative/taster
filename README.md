@@ -134,13 +134,13 @@ Pass `diagnostics=False` to skip this and only compute LogP values.
 
 ## Testing
 
-To run the full test suite
+To run the full test suite from the main folder run:
 
 ```bash
 pytest
 ```
 
-This will run all tests in `tests/`. Some tests require GROMACS (`gmx`) in your `PATH` and may take longer to complete.
+This will run all tests in `tests/`. Tests for the analysis module require [alchemtest](https://github.com/alchemistry/alchemtest)
 
 ---
 
