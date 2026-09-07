@@ -6,9 +6,9 @@ multiprocessing, with a semaphore capping concurrency and a pool of CPU pin
 offsets shared across all running tasks.
 """
 import os
+import multiprocessing
 from importlib.resources import files
 from pathlib import Path
-from multiprocessing import Process, Semaphore, Queue
 
 from tqdm import tqdm
 
@@ -165,8 +165,11 @@ def run_partitions(resname, solvents, reps=1, T=298,
     output_dir = Path(output_dir).resolve()
     if ncores is None:
         ncores = os.cpu_count() or 1
-    sem         = Semaphore(ncores)
-    offset_pool = Queue()
+    # Workers only shell out to gmx, so spawn avoids forking a possibly
+    # multi-threaded parent (e.g. once alchemlyb/JAX have been imported).
+    ctx         = multiprocessing.get_context("spawn")
+    sem         = ctx.Semaphore(ncores)
+    offset_pool = ctx.Queue()
     for i in range(ncores):
         offset_pool.put(i)
     tasks    = []
@@ -193,7 +196,7 @@ def run_partitions(resname, solvents, reps=1, T=298,
             for state in states:
                 sem.acquire()
                 offset = offset_pool.get()
-                proc = Process(target=_tracked_ti_state,
+                proc = ctx.Process(target=_tracked_ti_state,
                                args=(resname, state, workingdir, offset, gmx, sem, offset_pool, T, nsteps))
                 proc.start()
                 tasks.append((proc, rep, solvent, state))
