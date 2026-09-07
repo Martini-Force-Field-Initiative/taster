@@ -1,12 +1,13 @@
 # taster
 
-**taster** is a Python package for computing partition coefficients of small molecules using Martini 3 coarse-grained molecular dynamics and thermodynamic integration (TI) free energy calculations.
+**taster** is a Python package for computing partition coefficients of Martini 3 small molecules using free energy calculations.
 
 Given a molecule's CG structure and ITP file, taster automates the full workflow:
 - Solvation box preparation across multiple solvents
 - Parallel FEP/TI simulations via GROMACS
 - Free energy estimation using TI or MBAR
 - LogP calculation relative to a reference solvent (typically water)
+- Convergence and overlap diagnostics (forward/backward convergence, MBAR overlap matrix, TI dhdl plots) for each leg
 
 ---
 
@@ -16,15 +17,17 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 - GROMACS (2024.3 or greater needed if topologies use angles with restricted bending potentials)
 - `numpy >= 1.20`
 - `pandas >= 1.0`
+- `matplotlib >= 3.5`
 - `MDAnalysis >= 2.0`
 - `alchemlyb >= 2.0`
+- `tqdm >= 4.60`
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/taster.git
+git clone https://github.com/Lp0lp/taster.git
 cd taster
 pip install -e .
 ```
@@ -114,6 +117,18 @@ rep  solvent               dG      dG_err   logP    logP_err
 avg  octanol-water_74-26  -12.3    0.2      2.16    0.04
 avg  hexadecane           -15.1    0.3      2.64    0.05
 ```
+
+### Convergence and Overlap Diagnostics
+
+By default (`diagnostics=True`), `process_partition` also saves convergence/overlap
+figures for every replicate and solvent leg (including the reference solvent) under
+`./Partitions/<resname>/diagnostics/<rep>/<solvent>/`:
+- `mbar_convergence.png` / `ti_convergence.png` — forward/backward convergence of the free energy estimate
+- `mbar_overlap_matrix.png` — MBAR overlap matrix between neighbouring lambda states (MBAR only)
+- `ti_dhdl.png` — dHdl curve across lambda states (TI only)
+- `convergence.log` — convergence analysis log, kept out of the terminal
+
+Pass `diagnostics=False` to skip this and only compute LogP values.
 
 ---
 

@@ -1,105 +1,102 @@
+"""Tests for taster.prepare. No real GROMACS is invoked: _build_box is
+mocked out wherever it would otherwise run editconf/solvate."""
+from unittest.mock import patch
+
 import pytest
 
 from taster.prepare import _write_topology, prepare_partition_setup
+from conftest import write_gro, write_itp
 
 
-# ---------------------------------------------------------------------------
-# _write_topology — no GROMACS needed (pure MDAnalysis + file I/O)
-# ---------------------------------------------------------------------------
+def test_write_topology_uses_itp_moleculetype_name_not_structure_resname(tmp_path):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="X")  # deliberately mismatched on-disk resname
+    write_itp(itp, molname="MOL")
+    out = tmp_path / "system.top"
 
-def test_write_topology_creates_file(tmp_path, fixtures_dir):
-    top_out = tmp_path / "system.top"
-    _write_topology(fixtures_dir / "TST.itp", fixtures_dir / "TST.gro", output=top_out)
-    assert top_out.exists()
+    _write_topology(itp, gro, output=out)
 
-
-def test_write_topology_contains_molecules_section(tmp_path, fixtures_dir):
-    top_out = tmp_path / "system.top"
-    _write_topology(fixtures_dir / "TST.itp", fixtures_dir / "TST.gro", output=top_out)
-    content = top_out.read_text()
-    assert "[ molecules ]" in content
-    assert "TST" in content
+    last_line = out.read_text().splitlines()[-1].split()
+    assert last_line[0] == "MOL"
+    assert last_line[1] == "1"
 
 
-def test_write_topology_molecule_count(tmp_path, fixtures_dir):
-    top_out = tmp_path / "system.top"
-    _write_topology(fixtures_dir / "TST.itp", fixtures_dir / "TST.gro", output=top_out)
-    # The GRO has exactly 1 TST residue
-    lines = top_out.read_text().splitlines()
-    mol_lines = [l for l in lines if l.startswith("TST")]
-    assert len(mol_lines) == 1
-    assert mol_lines[0].split()[1] == "1"
+def test_write_topology_counts_residues(tmp_path):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="MOL", n_residues=3)
+    write_itp(itp, molname="MOL")
+    out = tmp_path / "system.top"
+
+    _write_topology(itp, gro, output=out)
+
+    last_line = out.read_text().splitlines()[-1].split()
+    assert last_line == ["MOL", "3"]
 
 
-def test_write_topology_includes_ff(tmp_path, fixtures_dir):
-    top_out = tmp_path / "system.top"
-    _write_topology(fixtures_dir / "TST.itp", fixtures_dir / "TST.gro", output=top_out)
-    content = top_out.read_text()
-    assert "martini_v3.0.0.itp" in content
-    assert "martini_v3.0.0_solvents_v1.itp" in content
-    assert "martini_v3.0.0_ions_v1.itp" in content
+def test_prepare_partition_setup_rejects_multiple_residues(tmp_path):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="MOL", n_residues=2)
+    write_itp(itp, molname="MOL")
+
+    with pytest.raises(ValueError, match="Expected exactly 1 residue"):
+        prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
+                                output_dir=tmp_path / "Partitions")
 
 
-# ---------------------------------------------------------------------------
-# prepare_partition_setup — ValueError when GRO has multiple residue types
-# (no GROMACS needed; validation happens before any gmx call)
-# ---------------------------------------------------------------------------
+def test_prepare_partition_setup_warns_on_resname_mismatch(tmp_path):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="X")
+    write_itp(itp, molname="MOL")
 
-def test_prepare_multiple_resnames_raises(tmp_path, fixtures_dir):
-    two_res_gro = tmp_path / "two_res.gro"
-    two_res_gro.write_text(
-        "Two-residue test\n"
-        "    2\n"
-        "    1TST     BB    1   0.000   0.000   0.000\n"
-        "    2SOL      W    2   1.000   0.000   0.000\n"
-        "   4.00000   4.00000   4.00000\n"
-    )
-    with pytest.raises(ValueError, match="Expected exactly 1 residue name"):
-        prepare_partition_setup(
-            fixtures_dir / "TST.itp", two_res_gro,
-            solvents=["water"], reps=1, output_dir=tmp_path,
-        )
+    with patch("taster.prepare._build_box"):
+        with pytest.warns(UserWarning, match="does not match"):
+            resname = prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
+                                              output_dir=tmp_path / "Partitions")
+    assert resname == "MOL"
 
 
-# ---------------------------------------------------------------------------
-# prepare_partition_setup — full run (requires GROMACS)
-# ---------------------------------------------------------------------------
+def test_prepare_partition_setup_warns_on_bundled_solvent_name_collision(tmp_path):
+    # "PPN" is acetone's moleculetype name in the bundled solvent ITP.
+    gro = tmp_path / "ppn.gro"
+    itp = tmp_path / "ppn.itp"
+    write_gro(gro, resname="PPN")
+    write_itp(itp, molname="PPN")
 
-@pytest.mark.gmx
-def test_prepare_creates_directory_structure(tmp_path, fixtures_dir, gmx_executable):
-    prepare_partition_setup(
-        fixtures_dir / "TST.itp", fixtures_dir / "TST.gro",
-        solvents=["water"], reps=1, output_dir=tmp_path, gmx=gmx_executable,
-    )
-    assert (tmp_path / "TST" / "1" / "water" / "system.gro").exists()
-    assert (tmp_path / "TST" / "1" / "water" / "system_.gro").exists()
-
-
-@pytest.mark.gmx
-def test_prepare_returns_resname(tmp_path, fixtures_dir, gmx_executable):
-    resname = prepare_partition_setup(
-        fixtures_dir / "TST.itp", fixtures_dir / "TST.gro",
-        solvents=["water"], reps=1, output_dir=tmp_path, gmx=gmx_executable,
-    )
-    assert resname == "TST"
+    with patch("taster.prepare._build_box"):
+        with pytest.warns(UserWarning, match="collides with a moleculetype"):
+            prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
+                                    output_dir=tmp_path / "Partitions")
 
 
-@pytest.mark.gmx
-def test_prepare_generates_valid_topology(tmp_path, fixtures_dir, gmx_executable):
-    prepare_partition_setup(
-        fixtures_dir / "TST.itp", fixtures_dir / "TST.gro",
-        solvents=["water"], reps=1, output_dir=tmp_path, gmx=gmx_executable,
-    )
-    top = (tmp_path / "TST" / "1" / "water" / "system.top").read_text()
-    assert "[ molecules ]" in top
-    assert "TST" in top
+def test_prepare_partition_setup_no_warnings_when_consistent(tmp_path, recwarn):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="XYZ12")
+    write_itp(itp, molname="XYZ12")
+
+    with patch("taster.prepare._build_box"):
+        resname = prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
+                                          output_dir=tmp_path / "Partitions")
+
+    assert resname == "XYZ12"
+    assert len(recwarn) == 0
 
 
-@pytest.mark.gmx
-def test_prepare_multiple_reps(tmp_path, fixtures_dir, gmx_executable):
-    prepare_partition_setup(
-        fixtures_dir / "TST.itp", fixtures_dir / "TST.gro",
-        solvents=["water"], reps=2, output_dir=tmp_path, gmx=gmx_executable,
-    )
+def test_prepare_partition_setup_creates_expected_directory_layout(tmp_path):
+    gro = tmp_path / "mol.gro"
+    itp = tmp_path / "mol.itp"
+    write_gro(gro, resname="MOL")
+    write_itp(itp, molname="MOL")
+    output_dir = tmp_path / "Partitions"
+
+    with patch("taster.prepare._build_box"):
+        prepare_partition_setup(itp, gro, solvents=["water", "hexadecane"],
+                                reps=2, output_dir=output_dir)
+
     for rep in ("1", "2"):
-        assert (tmp_path / "TST" / rep / "water" / "system.gro").exists()
+        for solvent in ("water", "hexadecane"):
+            assert (output_dir / "MOL" / rep / solvent / "system.top").is_file()

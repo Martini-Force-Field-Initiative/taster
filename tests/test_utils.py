@@ -1,101 +1,78 @@
-import subprocess
+"""Tests for taster.utils."""
+from importlib.resources import files
+from pathlib import Path
 
 import pytest
 
 from taster.utils import (
-    _find_xvg_files,
-    _get_available_solvents,
+    _get_moleculetype_name,
+    _get_moleculetype_names,
     _replace_words_in_file,
-    _run,
+    _get_available_solvents,
+    _default_ff_itps,
 )
 
-EXPECTED_SOLVENTS = {"water", "octanol-water_74-26", "hexadecane", "chloroform"}
 
-
-# ---------------------------------------------------------------------------
-# _get_available_solvents
-# ---------------------------------------------------------------------------
-
-def test_get_available_solvents_returns_set():
-    assert isinstance(_get_available_solvents(), set)
-
-
-def test_get_available_solvents_known_solvents():
-    assert EXPECTED_SOLVENTS <= _get_available_solvents()
-
-
-# ---------------------------------------------------------------------------
-# _replace_words_in_file
-# ---------------------------------------------------------------------------
-
-def test_replace_words_in_file_single(tmp_path):
-    src = tmp_path / "src.txt"
-    dst = tmp_path / "dst.txt"
-    src.write_text("Hello MOL world")
-    _replace_words_in_file(src, dst, ["MOL"], ["CPA3"])
-    assert dst.read_text() == "Hello CPA3 world"
-
-
-def test_replace_words_in_file_multiple(tmp_path):
-    src = tmp_path / "src.txt"
-    dst = tmp_path / "dst.txt"
-    src.write_text("couple-moltype = MOL\nref-t = TEMPERATURE\ninit-lambda-state = INIT-LAMBDA-STATE")
-    _replace_words_in_file(
-        src, dst,
-        ["MOL", "TEMPERATURE", "INIT-LAMBDA-STATE"],
-        ["TST", "298", "5"],
+def test_get_moleculetype_name_single(tmp_path):
+    itp = tmp_path / "mol.itp"
+    itp.write_text(
+        "[ moleculetype ]\n"
+        "; molname  nrexcl\n"
+        "  MOL        1\n"
+        "\n"
+        "[ atoms ]\n"
     )
-    content = dst.read_text()
-    assert "TST" in content
-    assert "298" in content
-    assert "5" in content
-    assert "MOL" not in content
-    assert "TEMPERATURE" not in content
-    assert "INIT-LAMBDA-STATE" not in content
+    assert _get_moleculetype_name(itp) == "MOL"
 
 
-def test_replace_words_in_file_mismatch_raises(tmp_path):
-    src = tmp_path / "src.txt"
-    dst = tmp_path / "dst.txt"
-    src.write_text("Hello")
-    with pytest.raises(ValueError):
-        _replace_words_in_file(src, dst, ["a", "b"], ["x"])
+def test_get_moleculetype_name_ignores_trailing_comment_on_header(tmp_path):
+    itp = tmp_path / "mol.itp"
+    itp.write_text(
+        "[ moleculetype ]   ;; some trailing comment\n"
+        "; molname  nrexcl\n"
+        "  PPN        1\n"
+    )
+    assert _get_moleculetype_name(itp) == "PPN"
 
 
-# ---------------------------------------------------------------------------
-# _find_xvg_files
-# ---------------------------------------------------------------------------
-
-def test_find_xvg_files_finds_all(tmp_path):
-    (tmp_path / "a.xvg").write_text("@ xvg data\n")
-    sub = tmp_path / "subdir"
-    sub.mkdir()
-    (sub / "b.xvg").write_text("@ xvg data\n")
-    (sub / "other.txt").write_text("not xvg")
-    result = _find_xvg_files(tmp_path)
-    names = {f.name for f in result}
-    assert names == {"a.xvg", "b.xvg"}
+def test_get_moleculetype_name_raises_if_section_missing(tmp_path):
+    itp = tmp_path / "mol.itp"
+    itp.write_text("[ atoms ]\n; nothing relevant here\n")
+    with pytest.raises(ValueError, match=r"No \[ moleculetype \] section"):
+        _get_moleculetype_name(itp)
 
 
-def test_find_xvg_files_skips_hidden_dirs(tmp_path):
-    hidden = tmp_path / ".ipynb_checkpoints"
-    hidden.mkdir()
-    (hidden / "hidden.xvg").write_text("@ xvg data\n")
-    (tmp_path / "visible.xvg").write_text("@ xvg data\n")
-    result = _find_xvg_files(tmp_path)
-    names = {f.name for f in result}
-    assert "hidden.xvg" not in names
-    assert "visible.xvg" in names
+def test_get_moleculetype_names_returns_all_in_file_order(tmp_path):
+    itp = tmp_path / "multi.itp"
+    itp.write_text(
+        "[moleculetype]\n; molname nrexcl\nAAA 1\n\n"
+        "[moleculetype]\n; molname nrexcl\nBBB 1\n\n"
+    )
+    assert _get_moleculetype_names(itp) == ["AAA", "BBB"]
 
 
-# ---------------------------------------------------------------------------
-# _run
-# ---------------------------------------------------------------------------
+def test_get_moleculetype_names_finds_real_bundled_collision():
+    solv_itp = files("taster.data.itps") / "martini_v3.0.0_solvents_v1.itp"
+    names = _get_moleculetype_names(solv_itp)
+    assert "PPN" in names
+    assert "W" in names
 
-def test_run_subprocess_success():
-    _run(["echo", "ok"])
+
+def test_replace_words_in_file(tmp_path):
+    src = tmp_path / "template.txt"
+    dst = tmp_path / "out.txt"
+    src.write_text("Hello MOL, lambda is INIT-LAMBDA-STATE.")
+    _replace_words_in_file(src, dst, ["MOL", "INIT-LAMBDA-STATE"], ["WAT", "3"])
+    assert dst.read_text() == "Hello WAT, lambda is 3."
 
 
-def test_run_subprocess_failure():
-    with pytest.raises(subprocess.CalledProcessError):
-        _run(["false"])
+def test_get_available_solvents_matches_bundled_data():
+    solvents = _get_available_solvents()
+    assert {"water", "hexadecane", "chloroform", "octanol-water_74-26"} <= solvents
+
+
+def test_default_ff_itps_point_to_real_bundled_files():
+    ff, solv, ions = _default_ff_itps()
+    assert Path(ff).is_file()
+    assert Path(solv).is_file()
+    assert Path(ions).is_file()

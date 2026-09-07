@@ -1,3 +1,9 @@
+"""Internal utility helpers used across the taster package.
+
+Contains thin wrappers around subprocess for running GROMACS commands,
+file-manipulation helpers for MDP template generation, and functions for
+locating bundled data and XVG output files.
+"""
 import subprocess
 from pathlib import Path
 from importlib.resources import files
@@ -18,6 +24,15 @@ def _get_available_solvents():
     return {f.name.replace('.gro', '')
             for f in files('taster.data.solvents').iterdir()
             if f.name.endswith('.gro')}
+
+
+def _default_ff_itps():
+    """Return the bundled (FFitp, SolvITP, IonsITP) default ITP paths."""
+    return (
+        files("taster.data.itps") / "martini_v3.0.0.itp",
+        files("taster.data.itps") / "martini_v3.0.0_solvents_v1.itp",
+        files("taster.data.itps") / "martini_v3.0.0_ions_v1.itp",
+    )
 
 
 def _replace_words_in_file(original_file_path, new_file_path,
@@ -41,23 +56,54 @@ def _replace_words_in_file(original_file_path, new_file_path,
         content = content.replace(old, new)
     Path(new_file_path).write_text(content)
 
-    
-def _find_xvg_files(workingdir):
+
+def _get_moleculetype_names(itp_path):
     """
-    Recursively find all XVG files in a directory, ignoring hidden directories.
- 
+    Parse an ITP file and return every molecule name defined across all of
+    its [ moleculetype ] sections.
+
     Parameters
     ----------
-    workingdir : str or Path
-        Directory to search.
- 
+    itp_path : str or Path
+        Path to the ITP file.
+
     Returns
     -------
-    list of Path
-        All XVG files found.
+    list of str
+        The molecule name (first field of the first data line) for each
+        [ moleculetype ] section found, in file order.
     """
-    workingdir = Path(workingdir)
-    return [
-        f for f in workingdir.rglob('*.xvg')
-        if not any(part.startswith('.') for part in f.parts)
-    ]
+    names = []
+    in_section = False
+    for line in Path(itp_path).read_text().splitlines():
+        stripped = line.split(';', 1)[0].strip()
+        if not stripped:
+            continue
+        if stripped.startswith('['):
+            in_section = stripped.strip('[] ').lower() == 'moleculetype'
+            continue
+        if in_section:
+            names.append(stripped.split()[0])
+            in_section = False
+    return names
+
+
+def _get_moleculetype_name(itp_path):
+    """
+    Parse an ITP file and return the molecule name from its [ moleculetype ] section.
+
+    Parameters
+    ----------
+    itp_path : str or Path
+        Path to the ITP file.
+
+    Returns
+    -------
+    str
+        The molecule name (first field of the first data line under
+        [ moleculetype ]).
+    """
+    names = _get_moleculetype_names(itp_path)
+    if not names:
+        raise ValueError(f"No [ moleculetype ] section found in {itp_path}")
+    return names[0]

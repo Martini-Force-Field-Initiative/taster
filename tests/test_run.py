@@ -1,64 +1,66 @@
+"""Tests for taster.run's orchestration logic, using a fake gmx executable
+(see conftest.fake_gmx) instead of real GROMACS. ncores is always fixed at 2,
+matching the GitHub Actions runner default, so these tests are deterministic
+regardless of how many cores the host actually has."""
 import pytest
-from multiprocessing import Semaphore
 
-from taster.run import _run_ti_state, _tracked_ti_state
-from taster.prepare import prepare_partition_setup
+from taster.run import run_partitions
 
 
-# ---------------------------------------------------------------------------
-# _tracked_ti_state — semaphore release guarantees
-# (uses a real semaphore but a fake _run_ti_state-equivalent via monkeypatch)
-# ---------------------------------------------------------------------------
-
-def test_tracked_ti_state_releases_semaphore_on_success(tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "taster.run._run_ti_state",
-        lambda *args, **kwargs: None,
-    )
-    sem = Semaphore(1)
-    sem.acquire()
-    _tracked_ti_state("TST", 0, tmp_path, offset=0, gmx="gmx", sem=sem)
-    # After the call the slot should be released — we can acquire again
-    assert sem.acquire(block=False), "Semaphore was not released"
+def _make_system_files(workingdir):
+    workingdir.mkdir(parents=True, exist_ok=True)
+    (workingdir / "system.gro").write_text("fake\n")
+    (workingdir / "system.top").write_text("fake\n")
 
 
-def test_tracked_ti_state_releases_semaphore_on_exception(tmp_path, monkeypatch):
-    def _raise(*args, **kwargs):
-        raise RuntimeError("simulated failure")
+def test_run_partitions_all_states_succeed(tmp_path, fake_gmx):
+    output_dir = tmp_path / "Partitions"
+    _make_system_files(output_dir / "MOL" / "1" / "water")
 
-    monkeypatch.setattr("taster.run._run_ti_state", _raise)
-    sem = Semaphore(1)
-    sem.acquire()
-    with pytest.raises(RuntimeError):
-        _tracked_ti_state("TST", 0, tmp_path, offset=0, gmx="gmx", sem=sem)
-    assert sem.acquire(block=False), "Semaphore was not released after exception"
+    run_partitions("MOL", ["water"], reps=1, ncores=2, gmx="gmx",
+                   output_dir=output_dir, states=[0, 1, 2, 3], progress=False)
+
+    for state in [0, 1, 2, 3]:
+        state_dir = output_dir / "MOL" / "1" / "water" / str(state)
+        assert (state_dir / "fep.gro").exists()
+        assert "ERROR" not in (state_dir / "log.out").read_text()
 
 
-# ---------------------------------------------------------------------------
-# _run_ti_state — full single-state simulation (requires GROMACS, marked slow)
-#
-# Uses short test MDPs (nsteps=500) from tests/data/fixtures/ to keep runtime
-# under a minute while still exercising minimisation → relaxation → FEP.
-# ---------------------------------------------------------------------------
+def test_run_partitions_aggregates_a_single_failure(tmp_path, fake_gmx, monkeypatch):
+    output_dir = tmp_path / "Partitions"
+    _make_system_files(output_dir / "MOL" / "1" / "water")
+    monkeypatch.setenv("FAIL_STATE", "2")
 
-@pytest.mark.gmx
-@pytest.mark.slow
-def test_run_single_state(tmp_path, fixtures_dir, gmx_executable):
-    # First prepare a solvated TST-in-water box with a correct system.top
-    # that references bundled Martini ITP files (no hardcoded absolute paths).
-    prepare_partition_setup(
-        fixtures_dir / "TST.itp", fixtures_dir / "TST.gro",
-        solvents=["water"], reps=1, output_dir=tmp_path, gmx=gmx_executable,
-    )
-    workingdir = tmp_path / "TST" / "1" / "water"
+    with pytest.raises(RuntimeError, match=r"1 of 4 TI state\(s\) failed") as excinfo:
+        run_partitions("MOL", ["water"], reps=1, ncores=2, gmx="gmx",
+                       output_dir=output_dir, states=[0, 1, 2, 3], progress=False)
 
-    _run_ti_state(
-        "TST", state=0, workingdir=workingdir, gmx=gmx_executable,
-        fep_min_mdp=fixtures_dir / "test_min.mdp",
-        fep_rel_mdp=fixtures_dir / "test_rel.mdp",
-        fep_prod_mdp=fixtures_dir / "test_fep.mdp",
-    )
+    assert "state 2" in str(excinfo.value)
+    # The other three states should still have completed normally.
+    for state in [0, 1, 3]:
+        state_dir = output_dir / "MOL" / "1" / "water" / str(state)
+        assert (state_dir / "fep.gro").exists()
+    assert "ERROR" in (output_dir / "MOL" / "1" / "water" / "2" / "log.out").read_text()
 
-    xvg = workingdir / "0" / "fep.xvg"
-    assert xvg.exists()
-    assert xvg.stat().st_size > 0
+
+def test_run_partitions_never_reuses_a_still_busy_pin_offset(tmp_path, fake_gmx, monkeypatch):
+    log_path = tmp_path / "offsets.log"
+    monkeypatch.setenv("GMX_FAKE_LOG", str(log_path))
+    output_dir = tmp_path / "Partitions"
+    _make_system_files(output_dir / "MOL" / "1" / "water")
+
+    run_partitions("MOL", ["water"], reps=1, ncores=2, gmx="gmx",
+                   output_dir=output_dir, states=list(range(8)), progress=False)
+
+    intervals = {}
+    for line in log_path.read_text().splitlines():
+        offset, start, end = line.split()
+        intervals.setdefault(offset, []).append((float(start), float(end)))
+
+    assert intervals, "expected the fake gmx script to have logged mdrun calls"
+    for offset, spans in intervals.items():
+        spans.sort()
+        for (_, end_prev), (start_next, _) in zip(spans, spans[1:]):
+            assert start_next >= end_prev, (
+                f"pin offset {offset} was reused before its previous holder finished"
+            )
