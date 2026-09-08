@@ -1,5 +1,6 @@
 """Tests for taster.prepare. No real GROMACS is invoked: _build_box is
 mocked out wherever it would otherwise run editconf/solvate."""
+from importlib.resources import files
 from unittest.mock import patch
 
 import pytest
@@ -92,11 +93,16 @@ def test_prepare_partition_setup_creates_expected_directory_layout(tmp_path):
     write_gro(gro, resname="MOL")
     write_itp(itp, molname="MOL")
     output_dir = tmp_path / "Partitions"
+    solvents = sorted(
+        solvent.stem
+        for solvent in files("taster.data.solvents").iterdir()
+        if solvent.suffix == ".gro"
+    )
 
     with patch("taster.prepare._build_box"):
-        prepare_partition_setup(itp, gro, solvents=["water", "hexadecane"],
+        prepare_partition_setup(itp, gro, solvents=solvents,
                                 reps=2, output_dir=output_dir)
 
     for rep in ("1", "2"):
-        for solvent in ("water", "hexadecane"):
+        for solvent in solvents:
             assert (output_dir / "MOL" / rep / solvent / "system.top").is_file()
