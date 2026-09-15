@@ -1,0 +1,39 @@
+name: Python Code Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  lock_file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: uv lock --locked
+  lint-format:
+    runs-on: ubuntu-latest
+    needs: [lock_file]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: uv tool run pre-commit run --all-files
+  type_consistency:
+    runs-on: ubuntu-latest
+    needs: [lock_file, lint-format]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Install shaker with typecheck dependencies
+        run: uv sync --locked --group typecheck
+      - name: Run mypy
+        run: uv run mypy shaker/
+  test:
+    runs-on: ubuntu-latest
+    needs: [lock_file, lint-format, type_consistency]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Install shaker with test dependencies
+        run: uv sync --locked --group test
+      - name: Run pytest
+        run: uv run --locked pytest -v tests/
