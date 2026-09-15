@@ -66,6 +66,31 @@ def main():
         default=1250000,
         help="Number of steps for the FEP production run (default 1250000 = 25 ns at dt=0.02 ps).",
     )
+    parser.add_argument(
+        "--d",
+        type=float,
+        default=2.0,
+        help="Minimum distance between the solute and the box edge in nm.",
+    )
+    parser.add_argument(
+        "--states",
+        nargs="+",
+        type=int,
+        default=None,
+        help="Lambda states to simulate and analyze. Defaults to the standard states.",
+    )
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show a tqdm progress bar during the workflow.",
+    )
+    parser.add_argument(
+        "--diagnostics",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Save convergence and overlap diagnostics during analysis.",
+    )
 
     args = parser.parse_args()
 
@@ -83,6 +108,10 @@ def main():
             cutoff=args.cutoff,
             estimator=args.estimator,
             nsteps=args.nsteps,
+            progress=args.progress,
+            diagnostics=args.diagnostics,
+            d=args.d,
+            states=args.states,
         )
         print(df.to_string(index=False))
 
