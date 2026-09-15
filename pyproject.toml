@@ -24,7 +24,7 @@ dependencies = [
 
 [dependency-groups]
 lint = ["ruff==0.16.7", "nbqa", "pre-commit"]
-typecheck = ["mypy", "types-tqdm", "scipy-stubs"]
+typecheck = ["mypy", "types-tqdm", "pandas-stubs"]
 test = ["pytest"]
 docs = ["sphinx", "sphinx-design","pydata-sphinx-theme","numpydoc","myst-nb"]
 all = [
@@ -56,3 +56,14 @@ taster = "taster.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[[tool.mypy.overrides]]
+module = [
+  "MDAnalysis",
+  "alchemlyb",
+  "alchemlyb.convergence",
+  "alchemlyb.estimators",
+  "alchemlyb.parsing.gmx",
+  "alchemlyb.visualisation"
+]
+ignore_missing_imports = true
