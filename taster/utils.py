@@ -4,26 +4,35 @@ Contains thin wrappers around subprocess for running GROMACS commands,
 file-manipulation helpers for MDP template generation, and functions for
 locating bundled data and XVG output files.
 """
+
 import subprocess
-from pathlib import Path
 from importlib.resources import files
+from pathlib import Path
 
 
 def _run(cmd, *, log=None, env=None, input_text=None, cwd=None):
-    '''
+    """
     Short helper to assist when using subprocess to run gmx.
-    '''
-    subprocess.run(cmd, input=input_text,
-        text=True if input_text is not None else False,
-        stdout=log, stderr=subprocess.STDOUT, #if log is None goes to term.
-        env=env, cwd=cwd, check=True,)
+    """
+    subprocess.run(
+        cmd,
+        input=input_text,
+        text=input_text is not None,
+        stdout=log,
+        stderr=subprocess.STDOUT,  # if log is None goes to term.
+        env=env,
+        cwd=cwd,
+        check=True,
+    )
 
 
 def _get_available_solvents():
     """Return the set of solvent names available in taster.data.solvents."""
-    return {f.name.replace('.gro', '')
-            for f in files('taster.data.solvents').iterdir()
-            if f.name.endswith('.gro')}
+    return {
+        f.name.replace(".gro", "")
+        for f in files("taster.data.solvents").iterdir()
+        if f.name.endswith(".gro")
+    }
 
 
 def _default_ff_itps():
@@ -35,8 +44,9 @@ def _default_ff_itps():
     )
 
 
-def _replace_words_in_file(original_file_path, new_file_path,
-                           words_to_replace, replacement_words):
+def _replace_words_in_file(
+    original_file_path, new_file_path, words_to_replace, replacement_words
+):
     """
     Copy a file replacing multiple substrings in one pass.
 
@@ -76,11 +86,11 @@ def _get_moleculetype_names(itp_path):
     names = []
     in_section = False
     for line in Path(itp_path).read_text().splitlines():
-        stripped = line.split(';', 1)[0].strip()
+        stripped = line.split(";", 1)[0].strip()
         if not stripped:
             continue
-        if stripped.startswith('['):
-            in_section = stripped.strip('[] ').lower() == 'moleculetype'
+        if stripped.startswith("["):
+            in_section = stripped.strip("[] ").lower() == "moleculetype"
             continue
         if in_section:
             names.append(stripped.split()[0])

@@ -5,16 +5,28 @@ sequentially calls :mod:`taster.prepare`, :mod:`taster.run`, and
 :mod:`taster.analysis` to produce LogP values from a molecule ITP and CG
 structure file.
 """
+
+from .analysis import process_partition
 from .prepare import prepare_partition_setup
 from .run import run_partitions
-from .analysis import process_partition
 from .utils import _get_available_solvents
 
 
-def run_partition_workflow(itp, structure, solvents=None, reference='water',
-                           T=298, reps=1, ncores=None, output_dir='./Partitions',
-                           gmx='gmx', cutoff=5000, estimator='MBAR',
-                           nsteps=1250000, progress=True):
+def run_partition_workflow(
+    itp,
+    structure,
+    solvents=None,
+    reference="water",
+    T=298,
+    reps=1,
+    ncores=None,
+    output_dir="./Partitions",
+    gmx="gmx",
+    cutoff=5000,
+    estimator="MBAR",
+    nsteps=1250000,
+    progress=True,
+):
     """
     Run the full partition coefficient workflow: prepare, run, and analyse.
 
@@ -56,27 +68,47 @@ def run_partition_workflow(itp, structure, solvents=None, reference='water',
         DataFrame with columns: rep, solvent, dG, dG_err, logP, logP_err.
     """
     available = _get_available_solvents()
- 
+
     if solvents is None:
         solvents = sorted(available)
- 
+
     invalid = set(solvents) - available
     if invalid:
-        raise ValueError(f"Unknown solvents: {sorted(invalid)}. "
-                         f"Available: {sorted(available)}")
- 
+        raise ValueError(
+            f"Unknown solvents: {sorted(invalid)}. Available: {sorted(available)}"
+        )
+
     if reference not in solvents:
-        raise ValueError(f"Reference solvent '{reference}' must be in solvents list: {solvents}")
- 
+        raise ValueError(
+            f"Reference solvent '{reference}' must be in solvents list: {solvents}"
+        )
+
     organic_solvents = [s for s in solvents if s != reference]
- 
-    resname = prepare_partition_setup(itp, structure, solvents,
-                                      reps=reps, output_dir=output_dir, gmx=gmx)
- 
-    run_partitions(resname, solvents, reps=reps, ncores=ncores,
-                   output_dir=output_dir, gmx=gmx, T=T, nsteps=nsteps, progress=progress)
- 
-    return process_partition(resname, organic_solvents, water=reference,
-                             reps=reps, output_dir=output_dir,
-                             T=T, cutoff=cutoff, estimator=estimator,
-                             progress=progress)
+
+    resname = prepare_partition_setup(
+        itp, structure, solvents, reps=reps, output_dir=output_dir, gmx=gmx
+    )
+
+    run_partitions(
+        resname,
+        solvents,
+        reps=reps,
+        ncores=ncores,
+        output_dir=output_dir,
+        gmx=gmx,
+        T=T,
+        nsteps=nsteps,
+        progress=progress,
+    )
+
+    return process_partition(
+        resname,
+        organic_solvents,
+        water=reference,
+        reps=reps,
+        output_dir=output_dir,
+        T=T,
+        cutoff=cutoff,
+        estimator=estimator,
+        progress=progress,
+    )

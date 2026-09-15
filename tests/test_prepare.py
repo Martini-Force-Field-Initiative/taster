@@ -1,11 +1,12 @@
 """Tests for taster.prepare. No real GROMACS is invoked: _build_box is
 mocked out wherever it would otherwise run editconf/solvate."""
+
 from unittest.mock import patch
 
 import pytest
+from conftest import write_gro, write_itp
 
 from taster.prepare import _write_topology, prepare_partition_setup
-from conftest import write_gro, write_itp
 
 
 def test_write_topology_uses_itp_moleculetype_name_not_structure_resname(tmp_path):
@@ -42,8 +43,9 @@ def test_prepare_partition_setup_rejects_multiple_residues(tmp_path):
     write_itp(itp, molname="MOL")
 
     with pytest.raises(ValueError, match="Expected exactly 1 residue"):
-        prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
-                                output_dir=tmp_path / "Partitions")
+        prepare_partition_setup(
+            itp, gro, solvents=["water"], reps=1, output_dir=tmp_path / "Partitions"
+        )
 
 
 def test_prepare_partition_setup_warns_on_resname_mismatch(tmp_path):
@@ -52,10 +54,13 @@ def test_prepare_partition_setup_warns_on_resname_mismatch(tmp_path):
     write_gro(gro, resname="X")
     write_itp(itp, molname="MOL")
 
-    with patch("taster.prepare._build_box"):
-        with pytest.warns(UserWarning, match="does not match"):
-            resname = prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
-                                              output_dir=tmp_path / "Partitions")
+    with (
+        patch("taster.prepare._build_box"),
+        pytest.warns(UserWarning, match="does not match"),
+    ):
+        resname = prepare_partition_setup(
+            itp, gro, solvents=["water"], reps=1, output_dir=tmp_path / "Partitions"
+        )
     assert resname == "MOL"
 
 
@@ -66,10 +71,13 @@ def test_prepare_partition_setup_warns_on_bundled_solvent_name_collision(tmp_pat
     write_gro(gro, resname="PPN")
     write_itp(itp, molname="PPN")
 
-    with patch("taster.prepare._build_box"):
-        with pytest.warns(UserWarning, match="collides with a moleculetype"):
-            prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
-                                    output_dir=tmp_path / "Partitions")
+    with (
+        patch("taster.prepare._build_box"),
+        pytest.warns(UserWarning, match="collides with a moleculetype"),
+    ):
+        prepare_partition_setup(
+            itp, gro, solvents=["water"], reps=1, output_dir=tmp_path / "Partitions"
+        )
 
 
 def test_prepare_partition_setup_no_warnings_when_consistent(tmp_path, recwarn):
@@ -79,8 +87,9 @@ def test_prepare_partition_setup_no_warnings_when_consistent(tmp_path, recwarn):
     write_itp(itp, molname="XYZ12")
 
     with patch("taster.prepare._build_box"):
-        resname = prepare_partition_setup(itp, gro, solvents=["water"], reps=1,
-                                          output_dir=tmp_path / "Partitions")
+        resname = prepare_partition_setup(
+            itp, gro, solvents=["water"], reps=1, output_dir=tmp_path / "Partitions"
+        )
 
     assert resname == "XYZ12"
     assert len(recwarn) == 0
@@ -94,8 +103,9 @@ def test_prepare_partition_setup_creates_expected_directory_layout(tmp_path):
     output_dir = tmp_path / "Partitions"
 
     with patch("taster.prepare._build_box"):
-        prepare_partition_setup(itp, gro, solvents=["water", "hexadecane"],
-                                reps=2, output_dir=output_dir)
+        prepare_partition_setup(
+            itp, gro, solvents=["water", "hexadecane"], reps=2, output_dir=output_dir
+        )
 
     for rep in ("1", "2"):
         for solvent in ("water", "hexadecane"):

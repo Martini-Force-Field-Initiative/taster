@@ -2,6 +2,7 @@
 bundled real GROMACS-format benzene dataset rather than mocking alchemlyb,
 since it's tiny and fast to fit; everything else mocks TIRoutine to isolate
 taster's own arithmetic from alchemlyb."""
+
 import bz2
 import shutil
 from unittest.mock import patch
@@ -10,14 +11,30 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from taster.analysis import _format_report, process_partition, TIRoutine, RT, LN10
+from taster.analysis import LN10, RT, TIRoutine, _format_report, process_partition
 
 
 def test_format_report_includes_molecule_name_and_values():
-    df = pd.DataFrame([
-        dict(rep="1", solvent="octanol", dG=-12.3, dG_err=0.4, logP=2.15, logP_err=0.07),
-        dict(rep="avg", solvent="octanol", dG=-12.3, dG_err=0.4, logP=2.15, logP_err=0.07),
-    ])
+    df = pd.DataFrame(
+        [
+            {
+                "rep": "1",
+                "solvent": "octanol",
+                "dG": -12.3,
+                "dG_err": 0.4,
+                "logP": 2.15,
+                "logP_err": 0.07,
+            },
+            {
+                "rep": "avg",
+                "solvent": "octanol",
+                "dG": -12.3,
+                "dG_err": 0.4,
+                "logP": 2.15,
+                "logP_err": 0.07,
+            },
+        ]
+    )
     report = _format_report(df, "MOL")
     assert "Molecule: MOL" in report
     assert "octanol/water: 2.1500 +- 0.0700 LogP units" in report
@@ -45,9 +62,16 @@ def test_process_partition_partition_and_average_arithmetic(tmp_path):
             (output_dir / "MOL" / rep / solvent).mkdir(parents=True)
 
     with patch("taster.analysis.TIRoutine", side_effect=fake_ti_routine):
-        df = process_partition("MOL", ["octanol"], water="water", reps=2,
-                               output_dir=output_dir, T=300, diagnostics=False,
-                               progress=False)
+        df = process_partition(
+            "MOL",
+            ["octanol"],
+            water="water",
+            reps=2,
+            output_dir=output_dir,
+            T=300,
+            diagnostics=False,
+            progress=False,
+        )
 
     kT = RT * 300
     row1 = df[(df.rep == "1") & (df.solvent == "octanol")].iloc[0]
@@ -82,10 +106,12 @@ def _prepare_benzene_legs(base_dir):
 def test_tiroutine_mbar_and_ti_agree_on_real_data(tmp_path):
     states = _prepare_benzene_legs(tmp_path)
 
-    dG_mbar, err_mbar = TIRoutine(tmp_path / "water", T=300, cutoff=0,
-                                   states=states, estimator="MBAR")
-    dG_ti, err_ti = TIRoutine(tmp_path / "water", T=300, cutoff=0,
-                              states=states, estimator="TI")
+    dG_mbar, err_mbar = TIRoutine(
+        tmp_path / "water", T=300, cutoff=0, states=states, estimator="MBAR"
+    )
+    dG_ti, err_ti = TIRoutine(
+        tmp_path / "water", T=300, cutoff=0, states=states, estimator="TI"
+    )
 
     assert dG_mbar == pytest.approx(dG_ti, abs=2.0)
     assert err_mbar > 0
@@ -96,8 +122,14 @@ def test_tiroutine_diagnostics_saves_expected_figures(tmp_path):
     states = _prepare_benzene_legs(tmp_path)
     diag_dir = tmp_path / "diagnostics"
 
-    TIRoutine(tmp_path / "water", T=300, cutoff=0, states=states,
-             estimator="MBAR", diagnostics_dir=diag_dir)
+    TIRoutine(
+        tmp_path / "water",
+        T=300,
+        cutoff=0,
+        states=states,
+        estimator="MBAR",
+        diagnostics_dir=diag_dir,
+    )
 
     assert (diag_dir / "mbar_convergence.png").is_file()
     assert (diag_dir / "mbar_overlap_matrix.png").is_file()
@@ -107,10 +139,19 @@ def test_tiroutine_diagnostics_saves_expected_figures(tmp_path):
 def test_process_partition_end_to_end_with_real_data(tmp_path):
     states = _prepare_benzene_legs(tmp_path / "Partitions" / "MOL" / "1")
 
-    df = process_partition("MOL", ["octanol"], water="water", reps=1,
-                           output_dir=tmp_path / "Partitions", T=300,
-                           cutoff=0, states=states, estimator="MBAR",
-                           diagnostics=False, progress=False)
+    df = process_partition(
+        "MOL",
+        ["octanol"],
+        water="water",
+        reps=1,
+        output_dir=tmp_path / "Partitions",
+        T=300,
+        cutoff=0,
+        states=states,
+        estimator="MBAR",
+        diagnostics=False,
+        progress=False,
+    )
 
     assert set(df["rep"]) == {"1", "avg"}
     assert np.isfinite(df["logP"]).all()

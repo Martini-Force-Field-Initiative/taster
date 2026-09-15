@@ -1,10 +1,10 @@
 """Shared pytest fixtures for the taster test suite."""
+
 import os
 import stat
 import textwrap
 
 import pytest
-
 
 # A stand-in for the gmx CLI: instead of running any real simulation, it
 # touches whatever output file(s) it was asked to produce. It can simulate
@@ -81,7 +81,9 @@ def write_gro(path, resname, n_residues=1):
     """Write a minimal single-bead-per-residue GRO file for test fixtures."""
     lines = [f"Test molecule ({resname})", str(n_residues)]
     for i in range(1, n_residues + 1):
-        lines.append(f"{i:>5}{resname:<5}{'C1':>5}{i:>5}{float(i):>8.3f}{0.0:>8.3f}{0.0:>8.3f}")
+        lines.append(
+            f"{i:>5}{resname:<5}{'C1':>5}{i:>5}{float(i):>8.3f}{0.0:>8.3f}{0.0:>8.3f}"
+        )
     lines.append(f"{5.0:>10.5f}{5.0:>10.5f}{5.0:>10.5f}")
     path.write_text("\n".join(lines) + "\n")
 
