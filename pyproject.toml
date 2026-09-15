@@ -8,8 +8,10 @@ version = "0.1.0"
 description = "Martini CG free energy partition coefficient calculations."
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Luís Borges Araújo", email = "you@example.com" }]
-
+authors = [
+  { name = "Luís Borges Araújo", email = "luis.borges@ens-lyon.fr"},
+  { name = "Pablo Cardona Perez", email = "pablo.cardona_perez@ens-lyon.fr" }
+]
 dependencies = [
   "numpy>=1.20",
   "pandas>=1.0",
@@ -17,21 +19,27 @@ dependencies = [
   "MDAnalysis>=2.0",
   "alchemlyb>=2.0",
   "tqdm>=4.60",
+  "jax>=0.6.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-  "pytest",
-  "pytest-cov",
-  "alchemtest",
-]
-docs = [
-  "sphinx",
-  "numpydoc",
-  "myst-nb",
-  "sphinx-design",
-  "pydata-sphinx-theme",
-]
+[dependency-groups]
+lint = ["ruff==0.16.7", "nbqa", "pre-commit"]
+typecheck = ["mypy", "types-tqdm", "scipy-stubs"]
+test = ["pytest"]
+docs = ["sphinx", "sphinx-design","pydata-sphinx-theme","numpydoc","myst-nb"]
+all = [
+      { include-group = "lint" },
+      { include-group = "typecheck" },
+      { include-group = "test" },
+      { include-group = "docs" }
+      ]
+
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.setuptools]
 include-package-data = true
