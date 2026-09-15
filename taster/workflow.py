@@ -8,7 +8,7 @@ structure file.
 
 from .analysis import process_partition
 from .prepare import prepare_partition_setup
-from .run import run_partitions
+from .run import DEFAULT_STATES, run_partitions
 from .utils import _get_available_solvents
 
 
@@ -26,6 +26,9 @@ def run_partition_workflow(
     estimator="MBAR",
     nsteps=1250000,
     progress=True,
+    diagnostics=True,
+    d=2.0,
+    states=None,
 ):
     """
     Run the full partition coefficient workflow: prepare, run, and analyse.
@@ -61,6 +64,15 @@ def run_partition_workflow(
         at dt=0.02 ps). Does not affect minimization or relaxation lengths.
     progress : bool, optional
         Whether to display a tqdm progress bar while running. Defaults to True.
+    diagnostics : bool, optional
+        Whether to save convergence and overlap diagnostics during analysis.
+        Defaults to True.
+    d : float, optional
+        Minimum distance in nm between the solute and the simulation box edge.
+        Defaults to 2.0.
+    states : list of int, optional
+        Lambda states to simulate and analyze. Defaults to the standard states
+        defined by taster.
 
     Returns
     -------
@@ -71,6 +83,8 @@ def run_partition_workflow(
 
     if solvents is None:
         solvents = sorted(available)
+    if states is None:
+        states = DEFAULT_STATES
 
     invalid = set(solvents) - available
     if invalid:
@@ -86,7 +100,13 @@ def run_partition_workflow(
     organic_solvents = [s for s in solvents if s != reference]
 
     resname = prepare_partition_setup(
-        itp, structure, solvents, reps=reps, output_dir=output_dir, gmx=gmx
+        itp,
+        structure,
+        solvents,
+        reps=reps,
+        output_dir=output_dir,
+        gmx=gmx,
+        d=d,
     )
 
     run_partitions(
@@ -99,6 +119,7 @@ def run_partition_workflow(
         T=T,
         nsteps=nsteps,
         progress=progress,
+        states=states,
     )
 
     return process_partition(
@@ -111,4 +132,6 @@ def run_partition_workflow(
         cutoff=cutoff,
         estimator=estimator,
         progress=progress,
+        diagnostics=diagnostics,
+        states=states,
     )

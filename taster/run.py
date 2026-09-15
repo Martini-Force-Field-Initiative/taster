@@ -15,7 +15,8 @@ from tqdm import tqdm
 
 from .utils import _replace_words_in_file, _run
 
-DEFAULT_STATES = list(range(12))
+# Default lambda states for FEP/TI simulations (0 to 11)
+DEFAULT_STATES = tuple(range(12))
 
 
 def _run_ti_state(
