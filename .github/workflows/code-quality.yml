@@ -23,17 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - name: Install shaker with typecheck dependencies
+      - name: Install taster with typecheck dependencies
         run: uv sync --locked --group typecheck
       - name: Run mypy
-        run: uv run mypy shaker/
+        run: uv run mypy taster/
   test:
     runs-on: ubuntu-latest
     needs: [lock_file, lint-format, type_consistency]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - name: Install shaker with test dependencies
+      - name: Install taster with test dependencies
         run: uv sync --locked --group test
       - name: Run pytest
         run: uv run --locked pytest -v tests/
