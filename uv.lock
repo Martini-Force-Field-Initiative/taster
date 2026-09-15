@@ -103,6 +103,44 @@ wheels = [
 ]
 
 [[package]]
+name = "alchemtest"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ca/1a/b55e4ae5fc5c7a3d3baf41fba48936781c11ac92d4e0a556cfd579027902/alchemtest-0.8.0.tar.gz", hash = "sha256:9027ce4909263093673e33d4ffa4bf754923cda77e79c354613555fa87d498de", size = 73287518, upload-time = "2022-12-10T00:39:34.08Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/18/9068cd16c6821dda2fb00b3a0fadacb196a60b841baae9f865f5a9ebd3ba/alchemtest-0.8.0-py3-none-any.whl", hash = "sha256:d928748ceed4b8f20268300926ca5a59436d6999b132a6ab36a7bf62f196dd1c", size = 73307072, upload-time = "2022-12-10T00:39:28.359Z" },
+]
+
+[[package]]
+name = "alchemtest"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and sys_platform == 'win32'",
+    "python_full_version >= '3.15' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/d5/c4bf75591ada651ad7c0a7ced6cc480c1ccd3f24dd2ad6332c075052265e/alchemtest-1.0.0.tar.gz", hash = "sha256:a7acbd3c94a0cf06cc6feeb7f4ac446bbcf554e882e7d736901bae228942029b", size = 121415003, upload-time = "2025-11-20T19:52:14.667Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/f2/f9c335858683379080c75dbab56ed08fdb83c3171f0dc781d1b5cab72f4a/alchemtest-1.0.0-py3-none-any.whl", hash = "sha256:a809f9c7404e31f47079c749a5c190b75db2f6f60e2484828600122465c94e19", size = 121451666, upload-time = "2025-11-20T19:52:08.895Z" },
+]
+
+[[package]]
 name = "appnope"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4880,6 +4918,8 @@ dependencies = [
 
 [package.dev-dependencies]
 all = [
+    { name = "alchemtest", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "alchemtest", version = "1.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "mypy" },
     { name = "myst-nb" },
     { name = "nbqa" },
@@ -4915,6 +4955,8 @@ lint = [
     { name = "ruff" },
 ]
 test = [
+    { name = "alchemtest", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "alchemtest", version = "1.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pytest" },
 ]
 typecheck = [
@@ -4937,6 +4979,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 all = [
+    { name = "alchemtest" },
     { name = "mypy" },
     { name = "myst-nb" },
     { name = "nbqa" },
@@ -4962,7 +5005,10 @@ lint = [
     { name = "pre-commit" },
     { name = "ruff", specifier = "==0.16.7" },
 ]
-test = [{ name = "pytest" }]
+test = [
+    { name = "alchemtest" },
+    { name = "pytest" },
+]
 typecheck = [
     { name = "mypy" },
     { name = "pandas-stubs" },
