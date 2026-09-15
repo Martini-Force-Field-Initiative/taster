@@ -1,27 +1,22 @@
 """Tests for taster.utils."""
+
 from importlib.resources import files
 from pathlib import Path
 
 import pytest
 
 from taster.utils import (
+    _default_ff_itps,
+    _get_available_solvents,
     _get_moleculetype_name,
     _get_moleculetype_names,
     _replace_words_in_file,
-    _get_available_solvents,
-    _default_ff_itps,
 )
 
 
 def test_get_moleculetype_name_single(tmp_path):
     itp = tmp_path / "mol.itp"
-    itp.write_text(
-        "[ moleculetype ]\n"
-        "; molname  nrexcl\n"
-        "  MOL        1\n"
-        "\n"
-        "[ atoms ]\n"
-    )
+    itp.write_text("[ moleculetype ]\n; molname  nrexcl\n  MOL        1\n\n[ atoms ]\n")
     assert _get_moleculetype_name(itp) == "MOL"
 
 

@@ -43,10 +43,10 @@ import taster
 
 # Run the full workflow
 df = taster.run_partition_workflow(
-    itp='MOL.itp',
-    structure='MOL.gro',
-    solvents=['water', 'octanol-water_74-26', 'hexadecane', 'chloroform'],
-    reference='water',
+    itp="MOL.itp",
+    structure="MOL.gro",
+    solvents=["water", "octanol-water_74-26", "hexadecane", "chloroform"],
+    reference="water",
     reps=3,
     ncores=36,
 )
@@ -61,19 +61,21 @@ import taster
 
 # Step 1 — prepare simulation boxes
 resname = taster.prepare_partition_setup(
-    itp='MOL.itp',
-    structure='MOL.gro',
-    solvents=['water', 'octanol-water_74-26', 'hexadecane'],
+    itp="MOL.itp",
+    structure="MOL.gro",
+    solvents=["water", "octanol-water_74-26", "hexadecane"],
     reps=3,
 )
 
 # Step 2 — run TI simulations
-taster.run_partitions(resname, solvents=['water', 'octanol-water_74-26', 'hexadecane'],
-                      reps=3, ncores=36)
+taster.run_partitions(
+    resname, solvents=["water", "octanol-water_74-26", "hexadecane"], reps=3, ncores=36
+)
 
 # Step 3 — analyse
-df = taster.process_partition(resname, solvents=['octanol-water_74-26', 'hexadecane'],
-                               water='water', reps=3)
+df = taster.process_partition(
+    resname, solvents=["octanol-water_74-26", "hexadecane"], water="water", reps=3
+)
 ```
 
 ### CLI
@@ -96,6 +98,7 @@ taster --help
 
 ```python
 import taster
+
 print(taster.available_solvents())
 ```
 

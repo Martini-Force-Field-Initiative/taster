@@ -4,22 +4,31 @@ This module builds and solvates the simulation boxes and generates the GROMACS
 input files (topology, structure) needed to run thermodynamic integration across
 all requested solvents and replicates.
 """
+
 import warnings
-import MDAnalysis as md
 from importlib.resources import files
-import numpy as np
 from pathlib import Path
-from .utils import _run, _get_moleculetype_name, _get_moleculetype_names, _default_ff_itps
+
+import MDAnalysis as md
+import numpy as np
+
+from .utils import (
+    _default_ff_itps,
+    _get_moleculetype_name,
+    _get_moleculetype_names,
+    _run,
+)
 
 # Input structures often have no box vectors, so MDAnalysis's
 # missing-unit-cell warnings here are expected noise, not something
 # to act on.
-warnings.filterwarnings('ignore', message='Empty box.*', category=UserWarning)
-warnings.filterwarnings('ignore', message='.*missing dimension.*', category=UserWarning)
+warnings.filterwarnings("ignore", message="Empty box.*", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*missing dimension.*", category=UserWarning)
 
 
-def _write_topology(itp, structure, output='system.top',
-                    FFitp=None, SolvITP=None, IonsITP=None):
+def _write_topology(
+    itp, structure, output="system.top", FFitp=None, SolvITP=None, IonsITP=None
+):
     """
     Write a GROMACS topology file with Martini FF includes and molecule counts.
 
@@ -38,31 +47,35 @@ def _write_topology(itp, structure, output='system.top',
         Paths to Martini FF ITP files. Defaults to bundled taster data.
     """
     default_FFitp, default_SolvITP, default_IonsITP = _default_ff_itps()
-    if FFitp is None:   FFitp   = default_FFitp
-    if SolvITP is None: SolvITP = default_SolvITP
-    if IonsITP is None: IonsITP = default_IonsITP
+    if FFitp is None:
+        FFitp = default_FFitp
+    if SolvITP is None:
+        SolvITP = default_SolvITP
+    if IonsITP is None:
+        IonsITP = default_IonsITP
 
     header = [
         f'#include "{FFitp}"\n',
         f'#include "{SolvITP}"\n',
         f'#include "{IonsITP}"\n',
         f'#include "{itp}"\n',
-        '[ system ]\n',
-        'TI system built with Taster.\n',
-        '\n',
-        '[ molecules ]\n',
+        "[ system ]\n",
+        "TI system built with Taster.\n",
+        "\n",
+        "[ molecules ]\n",
     ]
 
-    molname  = _get_moleculetype_name(itp)
+    molname = _get_moleculetype_name(itp)
     n_residues = len(md.Universe(str(structure)).atoms.residues)
     header.append(f"{molname}    {n_residues}\n")
 
-    with open(output, 'w') as topout:
-        for line in header:
-            topout.write(line)
+    with open(output, "w") as topout:
+        topout.writelines(header)
 
 
-def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutralize=False):
+def _build_box(
+    cg_inputstructure, solvent, workingdir, gmx="gmx", d=2.0, neutralize=False
+):
     """
     Build a solvated simulation box using GROMACS editconf and solvate.
 
@@ -82,49 +95,100 @@ def _build_box(cg_inputstructure, solvent, workingdir, gmx='gmx', d=2.0, neutral
         Whether to neutralize the system with genion. Defaults to False.
     """
     SolventBox = files("taster.data.solvents") / f"{solvent}.gro"
-    minMDP     = files("taster.data.mdps") / "min.mdp"
+    minMDP = files("taster.data.mdps") / "min.mdp"
 
-    with open(workingdir / 'build.log', 'w') as log:
-        _run([gmx, 'editconf',
-              '-f', str(cg_inputstructure),
-              '-o', str(workingdir / 'system_.gro'),
-              '-d', str(d),
-              '-bt', 'dodecahedron'], log=log, cwd=workingdir)
+    with open(workingdir / "build.log", "w") as log:
+        _run(
+            [
+                gmx,
+                "editconf",
+                "-f",
+                str(cg_inputstructure),
+                "-o",
+                str(workingdir / "system_.gro"),
+                "-d",
+                str(d),
+                "-bt",
+                "dodecahedron",
+            ],
+            log=log,
+            cwd=workingdir,
+        )
 
-        _run([gmx, 'solvate',
-              '-cp', str(workingdir / 'system_.gro'),
-              '-cs', str(SolventBox),
-              '-o', str(workingdir / 'system.gro'),
-              '-p', str(workingdir / 'system.top')], log=log, cwd=workingdir)
+        _run(
+            [
+                gmx,
+                "solvate",
+                "-cp",
+                str(workingdir / "system_.gro"),
+                "-cs",
+                str(SolventBox),
+                "-o",
+                str(workingdir / "system.gro"),
+                "-p",
+                str(workingdir / "system.top"),
+            ],
+            log=log,
+            cwd=workingdir,
+        )
 
         if neutralize:
-            _run([gmx, 'grompp',
-                  '-f', str(minMDP),
-                  '-c', str(workingdir / 'system.gro'),
-                  '-p', str(workingdir / 'system.top'),
-                  '-o', str(workingdir / 'neutralize.tpr'),
-                  '-maxwarn', '100000'], log=log, cwd=workingdir)
+            _run(
+                [
+                    gmx,
+                    "grompp",
+                    "-f",
+                    str(minMDP),
+                    "-c",
+                    str(workingdir / "system.gro"),
+                    "-p",
+                    str(workingdir / "system.top"),
+                    "-o",
+                    str(workingdir / "neutralize.tpr"),
+                    "-maxwarn",
+                    "100000",
+                ],
+                log=log,
+                cwd=workingdir,
+            )
 
             solvent_resname = np.unique(md.Universe(str(SolventBox)).atoms.resnames)[0]
 
-            _run([gmx, 'genion',
-                  '-s', str(workingdir / 'neutralize.tpr'),
-                  '-o', str(workingdir / 'system.gro'),
-                  '-p', str(workingdir / 'system.top'),
-                  '-pname', 'NA', '-pq', '+1',
-                  '-nname', 'CL', '-nq', '-1',
-                  '-neutral'], log=log, cwd=workingdir, input_text=solvent_resname)
+            _run(
+                [
+                    gmx,
+                    "genion",
+                    "-s",
+                    str(workingdir / "neutralize.tpr"),
+                    "-o",
+                    str(workingdir / "system.gro"),
+                    "-p",
+                    str(workingdir / "system.top"),
+                    "-pname",
+                    "NA",
+                    "-pq",
+                    "+1",
+                    "-nname",
+                    "CL",
+                    "-nq",
+                    "-1",
+                    "-neutral",
+                ],
+                log=log,
+                cwd=workingdir,
+                input_text=solvent_resname,
+            )
 
 
-def prepare_partition_setup(itp, structure,
-                            solvents, reps=1,
-                            output_dir='./Partitions', gmx='gmx', d=2.0):
+def prepare_partition_setup(
+    itp, structure, solvents, reps=1, output_dir="./Partitions", gmx="gmx", d=2.0
+):
     """
     Prepare the directory structure and input files for partition TI simulations.
 
     Creates one solvated box and topology per solvent per replicate, under:
     output_dir / resname / rep / solvent /
-    
+
     Parameters
     ----------
     itp : str or Path
@@ -148,9 +212,9 @@ def prepare_partition_setup(itp, structure,
     str
         The molecule name, taken from the ITP's `[ moleculetype ]` section.
     """
-    cg_itp            = Path(itp).resolve()
+    cg_itp = Path(itp).resolve()
     cg_inputstructure = Path(structure).resolve()
-    output_dir        = Path(output_dir).resolve()
+    output_dir = Path(output_dir).resolve()
 
     residues = md.Universe(str(cg_inputstructure)).residues
     if len(residues) != 1:
@@ -169,8 +233,10 @@ def prepare_partition_setup(itp, structure,
         )
 
     _, default_SolvITP, default_IonsITP = _default_ff_itps()
-    reserved_names = {*_get_moleculetype_names(default_SolvITP),
-                      *_get_moleculetype_names(default_IonsITP)}
+    reserved_names = {
+        *_get_moleculetype_names(default_SolvITP),
+        *_get_moleculetype_names(default_IonsITP),
+    }
     if resname in reserved_names:
         warnings.warn(
             f"Molecule name '{resname}' collides with a moleculetype already "
@@ -184,9 +250,9 @@ def prepare_partition_setup(itp, structure,
             workingdir = output_dir / resname / str(rep) / solvent
             workingdir.mkdir(parents=True, exist_ok=True)
 
-            _write_topology(cg_itp, cg_inputstructure,
-                            output=workingdir / 'system.top')
-            _build_box(cg_inputstructure, solvent, workingdir,
-                       gmx=gmx, d=d, neutralize=False)
+            _write_topology(cg_itp, cg_inputstructure, output=workingdir / "system.top")
+            _build_box(
+                cg_inputstructure, solvent, workingdir, gmx=gmx, d=d, neutralize=False
+            )
 
     return resname

@@ -1,0 +1,38 @@
+name: Build documentation and wheel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  lock_file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: uv lock --locked
+
+  documentation:
+    runs-on: ubuntu-latest
+    needs: [lock_file]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: uv sync --locked --group docs
+      - run: uv run sphinx-build -W -b html docs/source docs/build/html
+      - uses: actions/upload-artifact@v7
+        with:
+          name: documentation
+          path: docs/build/html
+
+  wheel:
+    runs-on: ubuntu-latest
+    needs: [lock_file]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: uv build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-distributions
+          path: dist
