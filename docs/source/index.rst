@@ -83,10 +83,37 @@ Requirements:
 
 - Python >= 3.10
 - GROMACS >= 2024.3 (For molecule topologies using type 10 angles)
+- NumPy >= 1.20
+- pandas >= 1.0
+- Matplotlib >= 3.5
+- MDAnalysis >= 2.0
+- alchemlyb >= 2.0
+- tqdm >= 4.60
+- JAX >= 0.6.2
 
-.. code-block:: bash
+Install `uv <https://docs.astral.sh/uv/getting-started/installation/>`_ first,
+then choose the setup for your role.
+
+For users, install taster with the dependencies needed to run and test it:
+
+.. code-block:: console
 
    git clone https://github.com/Lp0lp/taster.git
    cd taster
-   pip install -e .
+    uv sync --group test
+
+The project environment is created in ``.venv`` using the versions pinned in
+``uv.lock``. The ``test`` dependency group provides pytest and alchemtest. Run
+the test suite with:
+
+.. code-block:: console
+
+    uv run pytest -v tests/
+
+For developers, install all linting, type-checking, testing, and documentation
+dependencies:
+
+.. code-block:: console
+
+    uv sync --all-groups
 

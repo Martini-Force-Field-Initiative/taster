@@ -21,15 +21,37 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 - `MDAnalysis >= 2.0`
 - `alchemlyb >= 2.0`
 - `tqdm >= 4.60`
+- `jax >= 0.6.2`
+
+Development dependencies are managed in uv dependency groups. The `test` group
+includes `pytest` and `alchemtest`; `lint`, `typecheck`, and `docs` provide the
+corresponding development tools.
 
 ---
 
 ## Installation
 
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) first.
+
+### For Users
+
+Install taster with the dependencies needed to run and test it:
+
 ```bash
 git clone https://github.com/Lp0lp/taster.git
 cd taster
-pip install -e .
+uv sync --group test
+```
+
+This creates a project environment in `.venv` using the versions pinned in
+`uv.lock`. GROMACS must also be installed separately.
+
+### For Developers
+
+Install taster with all linting, type-checking, testing, and documentation tools:
+
+```bash
+uv sync --all-groups
 ```
 
 ---
@@ -140,10 +162,11 @@ Pass `diagnostics=False` to skip this and only compute LogP values.
 To run the full test suite from the main folder run:
 
 ```bash
-pytest
+uv run pytest -v tests/
 ```
 
-This will run all tests in `tests/`. Tests for the analysis module require [alchemtest](https://github.com/alchemistry/alchemtest)
+This runs all tests in `tests/`; `alchemtest` is installed through the uv `test`
+dependency group.
 
 ---
 
