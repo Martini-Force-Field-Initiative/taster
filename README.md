@@ -42,6 +42,7 @@ git clone https://github.com/Lp0lp/taster.git
 cd taster
 uv sync --group test
 ```
+#### Add as well ```--extra cuda``` for NVIDIA GPU support or ```--extra rocm``` for AMD GPU support
 
 This creates a project environment in `.venv` using the versions pinned in
 `uv.lock`. GROMACS must also be installed separately.
@@ -53,7 +54,7 @@ Install taster with all linting, type-checking, testing, and documentation tools
 ```bash
 uv sync --all-groups
 ```
-
+#### Add as well ```--extra cuda``` for NVIDIA GPU support or ```--extra rocm``` for AMD GPU support
 ---
 
 ## Quick Start
