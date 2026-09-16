@@ -7,7 +7,7 @@ name = "taster"
 version = "0.1.0"
 description = "Martini CG free energy partition coefficient calculations."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
   { name = "Luís Borges Araújo", email = "luis.borges@ens-lyon.fr"},
   { name = "Pablo Cardona Perez", email = "pablo.cardona_perez@ens-lyon.fr" }
@@ -19,7 +19,7 @@ dependencies = [
   "MDAnalysis>=2.0",
   "alchemlyb>=2.0",
   "tqdm>=4.60",
-  "jax>=0.6.2",
+  "jax>=0.7.2"
 ]
 
 [dependency-groups]
@@ -34,6 +34,17 @@ all = [
       { include-group = "docs" }
       ]
 
+[project.optional-dependencies]
+cuda = ["jax[cuda13]>=0.7.2"]
+rocm = ["jax[rocm7-local]>=0.7.2"]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cuda" },
+        { extra = "rocm" },
+    ],
+]
 
 [tool.ruff]
 target-version = "py310"
