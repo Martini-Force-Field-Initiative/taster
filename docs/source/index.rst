@@ -1,5 +1,9 @@
-TASTER Documentation
-====================
+.. image:: _static/logo-with-name.png
+   :alt: Taster
+   :width: 480px
+   :align: center
+
+ 
 `Licensed with LGPLv2.1 <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_
 
 **taster** is a Python package for computing partition coefficients (LogP) 
@@ -98,7 +102,7 @@ For users, install taster with the dependencies needed to run and test it:
 
 .. code-block:: console
 
-   git clone https://github.com/Lp0lp/taster.git
+   git clone https://github.com/Martini-Force-Field-Initiative/taster.git
    cd taster
     uv sync --group test
 
