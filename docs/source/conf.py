@@ -83,7 +83,7 @@ html_theme_options = {
         # GitHub of the project
         {
             "name": "GitHub",
-            "url": "https://github.com/Lp0lp/taster",
+            "url": "https://github.com/Martini-Force-Field-Initiative/taster",
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         }

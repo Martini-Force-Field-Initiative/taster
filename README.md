@@ -1,4 +1,6 @@
-# taster
+<p align="center">
+    <img src="docs/source/_static/logo-with-name.svg" alt="Taster" width="480">
+</p>
 
 **taster** is a Python package for computing partition coefficients of Martini 3 small molecules using free energy calculations.
 
@@ -38,7 +40,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) first.
 Install taster with the dependencies needed to run and test it:
 
 ```bash
-git clone https://github.com/Lp0lp/taster.git
+git clone https://github.com/Martini-Force-Field-Initiative/taster.git
 cd taster
 uv sync --group test
 ```
@@ -175,6 +177,13 @@ dependency group.
 By default `ncores` is set to `os.cpu_count()`, which returns the total number of logical CPUs on the machine. On **shared HPC nodes** this will be the node's full core count.
 
 Always pass `ncores` explicitly to match the resources available to your job.
+
+---
+
+## Developed by:
+
+- Luís Borges Araújo — <luis.borges@ens-lyon.fr>
+- Pablo Cardona Perez — <pablo.cardona_perez@ens-lyon.fr>
 
 ---
 
