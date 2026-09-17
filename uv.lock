@@ -2044,7 +2044,7 @@ wheels = [
 
 [[package]]
 name = "martini-taster"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "alchemlyb", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
