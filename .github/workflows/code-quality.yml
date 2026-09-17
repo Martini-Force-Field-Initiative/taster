@@ -1,8 +1,14 @@
 name: Python Code Quality
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    tags:
+      - "v*"
   pull_request:
+    branches:
+      - main
+      
 jobs:
   lock_file:
     runs-on: ubuntu-latest
