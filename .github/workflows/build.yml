@@ -9,46 +9,119 @@ on:
 
 jobs:
   lock_file:
+    name: Check lock file
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      - run: uv lock --locked
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+
+      - name: Check lock file
+        run: uv lock --locked
 
   documentation:
+    name: Build documentation
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs:
+      - lock_file
     runs-on: ubuntu-latest
-    needs: [lock_file]
+
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      - run: uv sync --locked --group docs
-      - run: uv run sphinx-build -W -b html docs/source docs/build/html
-      - uses: actions/upload-artifact@v7
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+
+      - name: Install documentation dependencies
+        run: uv sync --locked --group docs
+
+      - name: Build documentation
+        run: uv run sphinx-build -W -b html docs/source docs/build/html
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v7
         with:
           name: documentation
           path: docs/build/html
 
   wheel:
     name: Build distribution
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs:
+      - lock_file
     runs-on: ubuntu-latest
-    needs: [lock_file]
+
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v7
+      - name: Check out source
+        uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
-      - uses: ./.github/actions/setup
-      - run: uv build
-      - uses: actions/upload-artifact@v7
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+
+      - name: Build distribution
+        run: uv build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v7
         with:
           name: python-distributions
-          path: dist
-          
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish Python distribution to PyPI
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
+    needs:
+      - wheel
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/martini-taster
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
   publish-to-testpypi:
     name: Publish Python distribution to TestPyPI
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
     needs:
-    - wheel
+      - wheel
     runs-on: ubuntu-latest
 
     environment:
@@ -56,15 +129,17 @@ jobs:
       url: https://test.pypi.org/p/martini-taster
 
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      contents: read
+      id-token: write
 
     steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v6
-      with:
-        name: python-distributions
-        path: dist/
-    - name: Publish distribution to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
+      - name: Download distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
