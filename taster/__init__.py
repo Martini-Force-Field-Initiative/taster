@@ -4,7 +4,7 @@ taster — Martini CG free energy partition coefficient calculations
 
 from importlib.metadata import version
 
-__version__ = version("taster")
+__version__ = version("martini-taster")
 
 __all__ = [
     "DEFAULT_STATES",
