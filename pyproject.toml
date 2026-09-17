@@ -3,7 +3,7 @@ requires = ["setuptools>=61,<85", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "taster"
+name = "martini-taster"
 version = "0.1.0"
 description = "Martini CG free energy partition coefficient calculations."
 readme = "README.md"
