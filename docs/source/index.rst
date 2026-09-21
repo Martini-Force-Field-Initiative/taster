@@ -4,7 +4,8 @@
    :align: center
 
  
-`Licensed with LGPLv2.1 <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_
+.. centered::
+   `Licenced with LGPLv2.1 <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_
 
 **taster** is a Python package for computing partition coefficients (LogP) 
 using thermodynamic integration (TI) free energy calculations of small molecules 
