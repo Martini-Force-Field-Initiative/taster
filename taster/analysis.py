@@ -80,7 +80,7 @@ def _save_diagnostics(diagnostics_dir, estimator_name, data_list, result):
     prefix = estimator_name.lower()
 
     convergence_df = forward_backward_convergence(data_list, estimator=estimator_name)
-    ax = plot_convergence(convergence_df)
+    ax = plot_convergence(convergence_df, units=data_list[0].attrs["energy_unit"])
     ax.figure.savefig(
         diagnostics_dir / f"{prefix}_convergence.png", dpi=300, bbox_inches="tight"
     )
