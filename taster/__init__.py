@@ -2,9 +2,14 @@
 taster — Martini CG free energy partition coefficient calculations
 """
 
+import logging
 from importlib.metadata import version
 
 __version__ = version("martini-taster")
+
+# pymbar.timeseries logs a warning at import time (triggered via alchemlyb).
+# Only log error from that module so we don't see the warning.
+logging.getLogger("pymbar.timeseries").setLevel(logging.ERROR)
 
 __all__ = [
     "DEFAULT_STATES",
