@@ -15,7 +15,7 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 
 ## Requirements
 
-- Python >= 3.10
+- Python >= 3.11
 - GROMACS (2024.3 or greater needed if topologies use angles with restricted bending potentials)
 - `numpy >= 1.20`
 - `pandas >= 1.0`
@@ -23,7 +23,7 @@ Given a molecule's CG structure and ITP file, taster automates the full workflow
 - `MDAnalysis >= 2.0`
 - `alchemlyb >= 2.0`
 - `tqdm >= 4.60`
-- `jax >= 0.6.2`
+- `jax >= 0.7.2`
 
 Development dependencies are managed in uv dependency groups. The `test` group
 includes `pytest` and `alchemtest`; `lint`, `typecheck`, and `docs` provide the
