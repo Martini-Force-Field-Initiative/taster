@@ -1860,7 +1860,7 @@ wheels = [
 
 [[package]]
 name = "martini-taster"
-version = "0.1.3"
+version = "0.1.5"
 source = { editable = "." }
 dependencies = [
     { name = "alchemlyb" },
