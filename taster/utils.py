@@ -112,8 +112,18 @@ def _get_moleculetype_name(itp_path):
     str
         The molecule name (first field of the first data line under
         [ moleculetype ]).
+
+    Raises
+    ------
+    ValueError
+        If the ITP has no [ moleculetype ] section, or defines more than one.
     """
     names = _get_moleculetype_names(itp_path)
     if not names:
         raise ValueError(f"No [ moleculetype ] section found in {itp_path}")
+    if len(names) > 1:
+        raise ValueError(
+            f"Expected exactly 1 [ moleculetype ] in {itp_path}, found "
+            f"{len(names)}: {names}. Provide an ITP defining a single molecule."
+        )
     return names[0]

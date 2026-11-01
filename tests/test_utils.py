@@ -37,6 +37,16 @@ def test_get_moleculetype_name_raises_if_section_missing(tmp_path):
         _get_moleculetype_name(itp)
 
 
+def test_get_moleculetype_name_raises_if_multiple_moleculetypes(tmp_path):
+    itp = tmp_path / "multi.itp"
+    itp.write_text(
+        "[moleculetype]\n; molname nrexcl\nAAA 1\n\n"
+        "[moleculetype]\n; molname nrexcl\nBBB 1\n\n"
+    )
+    with pytest.raises(ValueError, match=r"Expected exactly 1 \[ moleculetype \]"):
+        _get_moleculetype_name(itp)
+
+
 def test_get_moleculetype_names_returns_all_in_file_order(tmp_path):
     itp = tmp_path / "multi.itp"
     itp.write_text(
